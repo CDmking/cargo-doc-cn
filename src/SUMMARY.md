@@ -7,7 +7,7 @@
     * [初次使用 Cargo](getting-started/first-steps.md)
 
 * [Cargo 指南](guide/index.md)
-    * [Why Cargo Exists](guide/why-cargo-exists.md)
+    * [Cargo 存在的原因](guide/why-cargo-exists.md)
     * [Creating a New Package](guide/creating-a-new-project.md)
     * [Working on an Existing Package](guide/working-on-an-existing-project.md)
     * [Dependencies](guide/dependencies.md)
