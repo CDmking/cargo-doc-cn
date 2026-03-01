@@ -1,24 +1,21 @@
-# Working on an Existing Cargo Package
+# 在已有的 Cargo 包上工作
 
-If you download an existing [package][def-package] that uses Cargo, it’s
-really easy to get going.
+如果您下载了一个使用 Cargo 的现有 [package][def-package]（包），那么开始工作非常简单。
 
-First, get the package from somewhere. In this example, we’ll use `regex`
-cloned from its repository on GitHub:
+首先，从某个地方获取该包。在此示例中，我们将使用从 GitHub 上的仓库克隆的 `regex`：
 
 ```console
 $ git clone https://github.com/rust-lang/regex.git
 $ cd regex
 ```
 
-To build, use `cargo build`:
+要构建，请使用 `cargo build`：
 
 ```console
 $ cargo build
    Compiling regex v1.5.0 (file:///path/to/package/regex)
 ```
 
-This will fetch all of the dependencies and then build them, along with the
-package.
+这将获取所有依赖项，然后构建它们以及该包。
 
-[def-package]:  ../appendix/glossary.md#package  '"package" (glossary entry)'
+[def-package]:  ../appendix/glossary.md#package  '"package"（词汇表条目）'
