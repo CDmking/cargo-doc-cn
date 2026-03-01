@@ -1,16 +1,15 @@
-# Cargo Guide
+# Cargo 指南
 
-This guide will give you all that you need to know about how to use Cargo to
-develop Rust packages.
+本指南将提供您所需了解的一切，以掌握如何使用 Cargo 来开发 Rust 包。
 
-* [Why Cargo Exists](why-cargo-exists.md)
-* [Creating a New Package](creating-a-new-project.md)
-* [Working on an Existing Cargo Package](working-on-an-existing-project.md)
-* [Dependencies](dependencies.md)
-* [Package Layout](project-layout.md)
-* [Cargo.toml vs Cargo.lock](cargo-toml-vs-cargo-lock.md)
-* [Tests](tests.md)
-* [Continuous Integration](continuous-integration.md)
-* [Publishing on crates.io](../reference/publishing.md)
-* [Cargo Home](cargo-home.md)
-* [Optimizing Build Performance](build-performance.md)
+* [Cargo 存在的原因](why-cargo-exists.md)
+* [创建新包](creating-a-new-project.md)
+* [在已有的 Cargo 包上工作](working-on-an-existing-project.md)
+* [依赖项](dependencies.md)
+* [包布局](project-layout.md)
+* [Cargo.toml 与 Cargo.lock](cargo-toml-vs-cargo-lock.md)
+* [测试](tests.md)
+* [持续集成](continuous-integration.md)
+* [在 crates.io 上发布](../reference/publishing.md)
+* [Cargo 主目录](cargo-home.md)
+* [优化构建性能](build-performance.md)
