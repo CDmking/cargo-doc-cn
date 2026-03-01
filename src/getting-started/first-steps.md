@@ -1,20 +1,16 @@
-# First Steps with Cargo
+# 初次使用 Cargo
 
-This section provides a quick sense for the `cargo` command line tool. We
-demonstrate its ability to generate a new [***package***][def-package] for us,
-its ability to compile the [***crate***][def-crate] within the package, and
-its ability to run the resulting program.
+本节简要介绍 `cargo` 命令行工具。我们将演示其为我们生成新 [***package***][def-package]（包）的能力、编译包内 [***crate***][def-crate] 的能力以及运行生成程序的能力。
 
-To start a new package with Cargo, use `cargo new`:
+要使用 Cargo 启动一个新包，请使用 `cargo new`：
 
 ```console
 $ cargo new hello_world
 ```
 
-Cargo defaults to `--bin` to make a binary program. To make a library, we
-would pass `--lib`, instead.
+默认情况下，Cargo 使用 `--bin` 来创建二进制程序。如果要创建库，我们需要传递 `--lib` 参数。
 
-Let’s check out what Cargo has generated for us:
+让我们看看 Cargo 为我们生成了什么：
 
 ```console
 $ cd hello_world
@@ -27,7 +23,7 @@ $ tree .
 1 directory, 2 files
 ```
 
-This is all we need to get started. First, let’s check out `Cargo.toml`:
+这就是我们开始所需的一切。首先，我们看一下 `Cargo.toml`：
 
 ```toml
 [package]
@@ -38,10 +34,9 @@ edition = "2024"
 [dependencies]
 ```
 
-This is called a [***manifest***][def-manifest], and it contains all of the
-metadata that Cargo needs to compile your package.
+这被称为 [***manifest***][def-manifest]（清单），它包含了 Cargo 编译您的包所需的所有元数据。
 
-Here’s what’s in `src/main.rs`:
+以下是 `src/main.rs` 中的内容：
 
 ```rust
 fn main() {
@@ -49,22 +44,21 @@ fn main() {
 }
 ```
 
-Cargo generated a “hello world” program for us, otherwise known as a
-[***binary crate***][def-crate]. Let’s compile it:
+Cargo 为我们生成了一个“hello world”程序，也称为 [***binary crate***][def-crate]（二进制 crate）。让我们编译它：
 
 ```console
 $ cargo build
    Compiling hello_world v0.1.0 (file:///path/to/package/hello_world)
 ```
 
-And then run it:
+然后运行它：
 
 ```console
 $ ./target/debug/hello_world
 Hello, world!
 ```
 
-We can also use `cargo run` to compile and then run it, all in one step:
+我们也可以使用 `cargo run` 来编译并运行，一步完成：
 
 ```console
 $ cargo run
@@ -73,10 +67,10 @@ $ cargo run
 Hello, world!
 ```
 
-## Going further
+## 进一步学习
 
-For more details on using Cargo, check out the [Cargo Guide](../guide/index.md)
+有关使用 Cargo 的更多详细信息，请查阅 [Cargo 指南](../guide/index.md)
 
-[def-crate]:     ../appendix/glossary.md#crate     '"crate" (glossary entry)'
-[def-manifest]:  ../appendix/glossary.md#manifest  '"manifest" (glossary entry)'
-[def-package]:   ../appendix/glossary.md#package   '"package" (glossary entry)'
+[def-crate]:     ../appendix/glossary.md#crate     '"crate"（词汇表条目）'
+[def-manifest]:  ../appendix/glossary.md#manifest  '"manifest"（词汇表条目）'
+[def-package]:   ../appendix/glossary.md#package   '"package"（词汇表条目）'

@@ -4,7 +4,7 @@
 
 * [入门指南](getting-started/index.md)
     * [安装](getting-started/installation.md)
-    * [First Steps with Cargo](getting-started/first-steps.md)
+    * [初次使用 Cargo](getting-started/first-steps.md)
 
 * [Cargo Guide](guide/index.md)
     * [Why Cargo Exists](guide/why-cargo-exists.md)
