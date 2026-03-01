@@ -8,7 +8,7 @@
 
 * [Cargo 指南](guide/index.md)
     * [Cargo 存在的原因](guide/why-cargo-exists.md)
-    * [Creating a New Package](guide/creating-a-new-project.md)
+    * [创建新项目](guide/creating-a-new-project.md)
     * [Working on an Existing Package](guide/working-on-an-existing-project.md)
     * [Dependencies](guide/dependencies.md)
     * [Package Layout](guide/project-layout.md)

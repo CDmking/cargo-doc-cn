@@ -1,16 +1,14 @@
-# Creating a New Package
+# 创建新项目
 
-To start a new [package][def-package] with Cargo, use `cargo new`:
+要使用 Cargo 启动一个新的 [package][def-package]（包），请使用 `cargo new`：
 
 ```console
 $ cargo new hello_world --bin
 ```
 
-We’re passing `--bin` because we’re making a binary program: if we
-were making a library, we’d pass `--lib`. This also initializes a new `git`
-repository by default. If you don't want it to do that, pass `--vcs none`.
+我们传递了 `--bin` 参数，因为我们正在创建一个二进制程序：如果我们正在创建一个库，我们会传递 `--lib`。默认情况下，这也会初始化一个新的 `git` 仓库。如果您不希望这样做，请传递 `--vcs none`。
 
-Let’s check out what Cargo has generated for us:
+让我们看看 Cargo 为我们生成了什么：
 
 ```console
 $ cd hello_world
@@ -23,7 +21,7 @@ $ tree .
 1 directory, 2 files
 ```
 
-Let’s take a closer look at `Cargo.toml`:
+让我们仔细看看 `Cargo.toml`：
 
 ```toml
 [package]
@@ -35,11 +33,9 @@ edition = "2024"
 
 ```
 
-This is called a [***manifest***][def-manifest], and it contains all of the
-metadata that Cargo needs to compile your package. This file is written in the
-[TOML] format (pronounced /tɑməl/).
+这被称为 [***manifest***][def-manifest]（清单），它包含了 Cargo 编译您的包所需的所有元数据。此文件采用 [TOML] 格式（发音为 /tɑməl/）。
 
-Here’s what’s in `src/main.rs`:
+以下是 `src/main.rs` 中的内容：
 
 ```rust
 fn main() {
@@ -47,24 +43,21 @@ fn main() {
 }
 ```
 
-Cargo generated a “hello world” program for you, otherwise known as a
-[*binary crate*][def-crate]. Let’s compile it:
+Cargo 为您生成了一个“hello world”程序，也称为 [*binary crate*][def-crate]（二进制 crate）。让我们编译它：
 
 ```console
 $ cargo build
    Compiling hello_world v0.1.0 (file:///path/to/package/hello_world)
 ```
 
-And then run it:
+然后运行它：
 
 ```console
 $ ./target/debug/hello_world
 Hello, world!
 ```
 
-You can also use `cargo run` to compile and then run it, all in one step (You
-won't see the `Compiling` line if you have not made any changes since you last
-compiled):
+您也可以使用 `cargo run` 来编译并运行，一步完成（如果您自上次编译以来未做任何更改，则不会看到 `Compiling` 这一行）：
 
 ```console
 $ cargo run
@@ -73,25 +66,20 @@ $ cargo run
 Hello, world!
 ```
 
-You’ll now notice a new file, `Cargo.lock`. It contains information about your
-dependencies. Since there are none yet, it’s not very interesting.
+现在您会注意到一个新文件 `Cargo.lock`。它包含有关您的依赖项的信息。由于目前还没有依赖项，它并不那么有趣。
 
-Once you’re ready for release, you can use `cargo build --release` to compile
-your files with optimizations turned on:
+当您准备好发布时，可以使用 `cargo build --release` 来启用优化编译您的文件：
 
 ```console
 $ cargo build --release
    Compiling hello_world v0.1.0 (file:///path/to/package/hello_world)
 ```
 
-`cargo build --release` puts the resulting binary in `target/release` instead of
-`target/debug`.
+`cargo build --release` 将生成的二进制文件放在 `target/release` 目录中，而不是 `target/debug`。
 
-Compiling in debug mode is the default for development. Compilation time is
-shorter since the compiler doesn't do optimizations, but the code will run
-slower. Release mode takes longer to compile, but the code will run faster.
+调试模式编译是开发时的默认设置。由于编译器不进行优化，编译时间更短，但代码运行速度较慢。发布模式编译时间更长，但代码运行速度更快。
 
 [TOML]: https://toml.io/
-[def-crate]:     ../appendix/glossary.md#crate     '"crate" (glossary entry)'
-[def-manifest]:  ../appendix/glossary.md#manifest  '"manifest" (glossary entry)'
-[def-package]:   ../appendix/glossary.md#package   '"package" (glossary entry)'
+[def-crate]:     ../appendix/glossary.md#crate     '"crate"（词汇表条目）'
+[def-manifest]:  ../appendix/glossary.md#manifest  '"manifest"（词汇表条目）'
+[def-package]:   ../appendix/glossary.md#package   '"package"（词汇表条目）'
