@@ -1,6 +1,6 @@
 # Summary
 
-[Introduction](index.md)
+[简介](index.md)
 
 * [Getting Started](getting-started/index.md)
     * [Installation](getting-started/installation.md)
@@ -99,5 +99,5 @@
 
 * [FAQ](faq.md)
 * [Changelog](CHANGELOG.md)
-* [Appendix: Glossary](appendix/glossary.md)
+* [Appendix: 词汇表](appendix/glossary.md)
 * [Appendix: Git Authentication](appendix/git-authentication.md)
