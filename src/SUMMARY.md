@@ -3,7 +3,7 @@
 [简介](index.md)
 
 * [入门指南](getting-started/index.md)
-    * [Installation](getting-started/installation.md)
+    * [安装](getting-started/installation.md)
     * [First Steps with Cargo](getting-started/first-steps.md)
 
 * [Cargo Guide](guide/index.md)
