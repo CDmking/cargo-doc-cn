@@ -1,35 +1,25 @@
-# Dependencies
+# 依赖
 
-[crates.io] is the Rust community's central [*package registry*][def-package-registry]
-that serves as a location to discover and download
-[packages][def-package]. `cargo` is configured to use it by default to find
-requested packages.
+[crates.io] 是 Rust 社区的中心化 [*package registry*][def-package-registry]（包注册中心），作为发现和下载 [package][def-package]（包）的位置。`cargo` 默认配置为使用它来查找所需的包。
 
-To depend on a library hosted on [crates.io], add it to your `Cargo.toml`.
+要依赖于托管在 [crates.io] 上的库，请将其添加到您的 `Cargo.toml` 中。
 
 [crates.io]: https://crates.io/
 
-## Adding a dependency
+## 添加依赖
 
-If your `Cargo.toml` doesn't already have a `[dependencies]` section, add
-that, then list the [crate][def-crate] name and version that you would like to
-use. This example adds a dependency on the `time` crate:
+如果您的 `Cargo.toml` 中还没有 `[dependencies]` 部分，请添加该部分，然后列出您想要使用的 [crate][def-crate]（包）名称和版本。此示例添加了对 `time` 包的依赖：
 
 ```toml
 [dependencies]
 time = "0.1.12"
 ```
 
-The version string is a [SemVer] version requirement. The [specifying
-dependencies](../reference/specifying-dependencies.md) docs have more information about
-the options you have here.
+版本字符串是一个 [SemVer] 版本要求。[指定依赖项](../reference/specifying-dependencies.md) 文档提供了有关此处可用选项的更多信息。
 
 [SemVer]: https://semver.org
 
-If you also wanted to add a dependency on the `regex` crate, you would not need
-to add `[dependencies]` for each crate listed. Here's what your whole
-`Cargo.toml` file would look like with dependencies on the `time` and `regex`
-crates:
+如果您还想添加对 `regex` 包的依赖，则无需为列出的每个包都添加 `[dependencies]`。以下是包含对 `time` 和 `regex` 包依赖项的整个 `Cargo.toml` 文件：
 
 ```toml
 [package]
@@ -42,8 +32,7 @@ time = "0.1.12"
 regex = "0.1.41"
 ```
 
-Re-run `cargo build`, and Cargo will fetch the new dependencies and all of
-their dependencies, compile them all, and update the `Cargo.lock`:
+重新运行 `cargo build`，Cargo 将获取新的依赖项及其所有依赖项，编译它们，并更新 `Cargo.lock`：
 
 ```console
 $ cargo build
@@ -63,13 +52,11 @@ $ cargo build
      Compiling hello_world v0.1.0 (file:///path/to/package/hello_world)
 ```
 
-`Cargo.lock` contains the exact information about which revision was used
-for all of these dependencies.
+`Cargo.lock` 包含了所有这些依赖项具体使用哪个修订版本的精确信息。
 
-Now, if `regex` gets updated, you will still build with the same revision until
-you choose to run `cargo update`.
+现在，如果 `regex` 包更新了，您仍然会使用相同的修订版本进行构建，直到您选择运行 `cargo update`。
 
-You can now use the `regex` library in `main.rs`.
+您现在可以在 `main.rs` 中使用 `regex` 库了。
 
 ```rust,ignore
 use regex::Regex;
@@ -80,7 +67,7 @@ fn main() {
 }
 ```
 
-Running it will show:
+运行它将显示：
 
 ```console
 $ cargo run
@@ -88,6 +75,6 @@ $ cargo run
 Did our date match? true
 ```
 
-[def-crate]:             ../appendix/glossary.md#crate             '"crate" (glossary entry)'
-[def-package]:           ../appendix/glossary.md#package           '"package" (glossary entry)'
-[def-package-registry]:  ../appendix/glossary.md#package-registry  '"package-registry" (glossary entry)'
+[def-crate]:             ../appendix/glossary.md#crate             '"crate"（词汇表条目）'
+[def-package]:           ../appendix/glossary.md#package           '"package"（词汇表条目）'
+[def-package-registry]:  ../appendix/glossary.md#package-registry  '"package-registry"（词汇表条目）'
