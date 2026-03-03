@@ -11,7 +11,7 @@
     * [创建新项目](guide/creating-a-new-project.md)
     * [在已有的 Cargo 项目上工作](guide/working-on-an-existing-project.md)
     * [依赖](guide/dependencies.md)
-    * [Package Layout](guide/project-layout.md)
+    * [包布局](guide/project-layout.md)
     * [Cargo.toml vs Cargo.lock](guide/cargo-toml-vs-cargo-lock.md)
     * [Tests](guide/tests.md)
     * [Continuous Integration](guide/continuous-integration.md)

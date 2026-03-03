@@ -1,7 +1,6 @@
-# Package Layout
+# 包布局 {#package-layout}
 
-Cargo uses conventions for file placement to make it easy to dive into a new
-Cargo [package][def-package]:
+Cargo 使用文件放置的约定，以便于快速了解新的 Cargo [包][def-package]：
 
 ```text
 .
@@ -33,31 +32,25 @@ Cargo [package][def-package]:
         └── test_module.rs
 ```
 
-* `Cargo.toml` and `Cargo.lock` are stored in the root of your package (*package
-  root*).
-* Source code goes in the `src` directory.
-* The default library file is `src/lib.rs`.
-* The default executable file is `src/main.rs`.
-    * Other executables can be placed in `src/bin/`.
-* Benchmarks go in the `benches` directory.
-* Examples go in the `examples` directory.
-* Integration tests go in the `tests` directory.
+* `Cargo.toml` 和 `Cargo.lock` 存储在包的根目录（*包根目录*）。
+* 源代码放在 `src` 目录中。
+* 默认的库文件是 `src/lib.rs`。
+* 默认的可执行文件是 `src/main.rs`。
+    * 其他可执行文件可以放在 `src/bin/` 目录中。
+* 基准测试放在 `benches` 目录中。
+* 示例放在 `examples` 目录中。
+* 集成测试放在 `tests` 目录中。
 
-If a binary, example, bench, or integration test consists of multiple source
-files, place a `main.rs` file along with the extra [*modules*][def-module]
-within a subdirectory of the `src/bin`, `examples`, `benches`, or `tests`
-directory. The name of the executable will be the directory name.
+如果一个二进制文件、示例、基准测试或集成测试由多个源文件组成，请在 `src/bin`、`examples`、`benches` 或 `tests` 目录的子目录中放置一个 `main.rs` 文件以及额外的[模块][def-module]。可执行文件的名称将是目录名。
 
-> **Note:** By convention, binaries, examples, benches and integration tests follow `kebab-case` naming style, unless there are compatibility reasons to do otherwise (e.g. compatibility with a pre-existing binary name). Modules within those targets are `snake_case` following the [Rust standard](https://rust-lang.github.io/rfcs/0430-finalizing-naming-conventions.html).
+> **注意**：按照约定，除非存在兼容性原因（例如，与现有的二进制文件名兼容），否则二进制文件、示例、基准测试和集成测试遵循 `kebab-case` 命名风格。这些目标中的模块遵循 `snake_case`，遵循[Rust 标准](https://rust-lang.github.io/rfcs/0430-finalizing-naming-conventions.html)。
 
-You can learn more about Rust's module system in [the book][book-modules].
+您可以在[书中][book-modules]了解更多关于 Rust 模块系统的信息。
 
-See [Configuring a target] for more details on manually configuring targets.
-See [Target auto-discovery] for more information on controlling how Cargo
-automatically infers target names.
+有关手动配置目标的更多详细信息，请参阅[配置目标][Configuring a target]。有关控制 Cargo 如何自动推断目标名称的更多信息，请参阅[目标自动发现][Target auto-discovery]。
 
 [book-modules]: ../../book/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html
 [Configuring a target]: ../reference/cargo-targets.md#configuring-a-target
-[def-package]:           ../appendix/glossary.md#package          '"package" (glossary entry)'
-[def-module]:            ../appendix/glossary.md#module           '"module" (glossary entry)'
+[def-package]:           ../appendix/glossary.md#package          '"package"（术语表条目）
+[def-module]:            ../appendix/glossary.md#module           '"module"（术语表条目）
 [Target auto-discovery]: ../reference/cargo-targets.md#target-auto-discovery
