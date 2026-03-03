@@ -41,7 +41,8 @@
         *   **示例**：
             *   标题`### First Steps with Cargo` 应翻译为 `### 初次使用 Cargo {#first-steps-with-cargo}`
             *   标题`## 2. Installation & Setup` 应翻译为 `## 2. 安装与设置 {#2-installation--setup}`
-            *   标题`## Using `[patch]` with multiple versions` 应翻译为 `## 将 `[patch]` 用于多个版本 {#using-patch-with-multiple-versions}`
+            *   标题`## Using `[patch]` with multiple versions` 应翻译为 ``## 将 `[patch]` 用于多个版本 {#using-patch-with-multiple-versions}``
+            *   标题`## Files:` 应翻译为 `## 文件： {#files}`
 
     **2. 保持原文**
     *   **所有代码**（代码块、内联代码、命令、路径、文件名）、**技术术语**（函数名、类名、变量名、API端点、关键字）以及**专有名词**（品牌、产品、项目名称）必须保留英文原   文，**不得翻译**。
