@@ -1,4 +1,4 @@
-# 覆盖依赖 {#overriding-dependencies}
+# 覆盖依赖项 {#overriding-dependencies}
 
 出于多种情况，可能会产生覆盖依赖的需求。然而，大多数情况归结为能够在包发布到 [crates.io] 之前使用它。例如：
 
