@@ -1,6 +1,6 @@
-# 安装
+# 安装 {#installation}
 
-## 安装 Rust 和 Cargo
+## 安装 Rust 和 Cargo {#install-rust-and-cargo}
 
 获取 Cargo 最简单的方式是通过 [rustup] 安装当前稳定版的 [Rust]。使用 `rustup` 安装 Rust 的同时也会安装 `cargo`。
 
@@ -22,7 +22,7 @@ Rust 现已安装完毕。太棒了！
 
 有关其他安装选项和更多信息，请访问 Rust 网站的[安装][install-rust]页面。
 
-## 从源代码构建和安装 Cargo
+## 从源代码构建和安装 Cargo {#build-and-install-cargo-from-source}
 
 或者，您可以[从源代码构建 Cargo][compiling-from-source]。
 

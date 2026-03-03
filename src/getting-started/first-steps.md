@@ -1,4 +1,4 @@
-# 初次使用 Cargo
+# 初次使用 Cargo {#first-steps-with-cargo}
 
 本节简要介绍 `cargo` 命令行工具。我们将演示其为我们生成新 [***package***][def-package]（包）的能力、编译包内 [***crate***][def-crate] 的能力以及运行生成程序的能力。
 
@@ -67,7 +67,7 @@ $ cargo run
 Hello, world!
 ```
 
-## 进一步学习
+## 进一步学习 {#going-further}
 
 有关使用 Cargo 的更多详细信息，请查阅 [Cargo 指南](../guide/index.md)
 

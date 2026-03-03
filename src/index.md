@@ -1,10 +1,10 @@
-# Cargo 手册
+# Cargo 手册 {#the-cargo-book}
 
 ![Cargo 标识](images/Cargo-Logo-Small.png)
 
 Cargo 是 [Rust] 语言的[*包管理器*][def-package-manager]。Cargo 负责下载您 Rust [包][def-package]的依赖项，编译您的包，制作可分发的包，并将其上传到 Rust 社区的[*包注册中心*][def-package-registry] [crates.io]。您可以在 [GitHub] 上参与本书的贡献。
 
-## 章节
+## 章节 {#sections}
 
 **[入门指南](getting-started/index.md)**
 

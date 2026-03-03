@@ -1,4 +1,4 @@
-# 创建新项目
+# 创建新项目 {#creating-a-new-package}
 
 要使用 Cargo 启动一个新的 [package][def-package]（包），请使用 `cargo new`：
 

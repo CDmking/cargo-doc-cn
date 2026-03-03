@@ -1,4 +1,4 @@
-# 覆盖依赖
+# 覆盖依赖 {#overriding-dependencies}
 
 出于多种情况，可能会产生覆盖依赖的需求。然而，大多数情况归结为能够在包发布到 [crates.io] 之前使用它。例如：
 
@@ -7,26 +7,25 @@
 * 您即将发布包的新的主版本，但希望在整个包中进行集成测试，以确保新的主版本能够工作。
 * 您为发现的一个 bug 向上游包提交了修复，但希望您的应用程序立即开始依赖于该包的修复版本，以避免因等待 bug 修复合并而被阻塞。
 
-这些场景可以通过 [`[patch]` 清单部分](#patch-部分)来解决。
+这些场景可以通过 [`[patch]` 清单部分](#the-patch-section)来解决。
 
 本章将介绍几种不同的用例，并详细说明覆盖依赖的不同方法。
 
 * 示例用例
-    * [测试 bug 修复](#测试-bug-修复)
-    * [处理未发布的次要版本](#处理未发布的次要版本)
-        * [覆盖仓库 URL](#覆盖仓库-url)
-    * [预发布破坏性变更](#预发布破坏性变更)
-    * [将 `[patch]` 用于多个版本](#将-patch-用于多个版本)
+    * [测试 bug 修复](#testing-a-bugfix)
+    * [处理未发布的次要版本](#working-with-an-unpublished-minor-version)
+        * [覆盖仓库 URL](#overriding-repository-url)
+    * [预发布破坏性变更](#prepublishing-a-breaking-change)
+    * [将 `[patch]` 用于多个版本](#using-patch-with-multiple-versions)
 * 参考
-    * [`[patch]` 部分](#patch-部分)
-    * [`[replace]` 部分](#replace-部分)
-    * [`paths` 覆盖](#paths-覆盖)
+    * [`[patch]` 部分](#the-patch-section)
+    * [`[replace]` 部分](#the-replace-section)
+    * [`paths` 覆盖](#paths-overrides)
 
-> **注意**：另请参阅[多个位置]指定依赖项，这可用于覆盖本地包中单个依赖项声明的源。
+> **注意**：另请参阅[多个位置][multiple locations]指定依赖项，这可用于覆盖本地包中单个依赖项声明的源。
 
-[多个位置]: specifying-dependencies.md#多个位置
 
-## 测试 bug 修复
+## 测试 bug 修复 {#testing-a-bugfix}
 
 假设您正在使用 [`uuid` crate]，但在使用过程中发现了一个 bug。不过，您非常积极进取，因此决定尝试修复这个 bug！最初，您的清单如下所示：
 
@@ -80,7 +79,7 @@ uuid = { git = 'https://github.com/uuid-rs/uuid.git' }
 
 [uuid-repository]: https://github.com/uuid-rs/uuid
 
-## 处理未发布的次要版本
+## 处理未发布的次要版本 {#working-with-an-unpublished-minor-version}
 
 现在让我们稍微转换一下话题，从 bug 修复转向添加功能。在开发 `my-library` 时，您发现 `uuid` 包中需要一个全新的功能。您已经实现了此功能，在上面使用 `[patch]` 在本地进行了测试，并提交了拉取请求。让我们看看在实际发布之前如何继续使用和测试它。
 
@@ -119,7 +118,7 @@ uuid = { git = 'https://github.com/uuid-rs/uuid.git' }
 
 请记住，`[patch]` 是 *可传递的*，但只能在 *顶级* 定义，因此我们作为 `my-library` 的消费者，如果需要，必须重复 `[patch]` 部分。但是在这里，新的 `uuid` 包既适用于我们对 `uuid` 的依赖，也适用于 `my-library -> uuid` 的依赖。整个包图将解析为 `uuid` 的一个版本，即 1.0.1，并且它将从 git 仓库拉取。
 
-### 覆盖仓库 URL
+### 覆盖仓库 URL {#overriding-repository-url}
 
 如果您想要覆盖的依赖不是从 `crates.io` 加载的，那么您需要稍微改变一下使用 `[patch]` 的方式。例如，如果依赖是 git 依赖，您可以使用本地路径覆盖它：
 
@@ -130,7 +129,7 @@ my-library = { path = "../my-library/path" }
 
 就是这样！
 
-## 预发布破坏性变更
+## 预发布破坏性变更 {#prepublishing-a-breaking-change}
 
 让我们看看如何处理包的新主版本，通常伴随着破坏性更改。继续使用我们之前的包，这意味着我们将创建 `uuid` 包的 2.0.0 版本。在我们将所有更改提交到上游后，我们可以更新 `my-library` 的清单，使其看起来像：
 
@@ -159,7 +158,7 @@ uuid = { git = 'https://github.com/uuid-rs/uuid.git', branch = '2.0.0' }
 
 请注意，这实际上会解析为两个版本的 `uuid` 包。`my-binary` 将继续使用 `uuid` 的 1.x.y 系列，但 `my-library` 将使用 `uuid` 的 `2.0.0` 版本。这将允许您通过依赖图逐步推出破坏性更改，而不必一次更新所有内容。
 
-## 将 `[patch]` 用于多个版本
+## 将 `[patch]` 用于多个版本 {#using-patch-with-multiple-versions}
 
 您可以使用 `package` 键来重命名依赖，从而打上同一个包的多个版本的补丁。例如，假设 `serde` 包有一个 bug 修复，我们希望将其用于其 `1.*` 系列，但我们也想尝试使用我们 git 仓库中 `serde` 的 `2.0.0` 版本进行原型设计。要配置这个，我们可以这样做：
 
@@ -174,7 +173,7 @@ serde2 = { git = 'https://github.com/example/serde.git', package = 'serde', bran
 
 注意，当使用 `package` 键时，这里的 `serde2` 标识符实际上被忽略了。我们只需要一个不与其它补丁包冲突的唯一名称。
 
-## `[patch]` 部分
+## `[patch]` 部分 {#the-patch-section}
 
 `Cargo.toml` 的 `[patch]` 部分可用于用其他副本覆盖依赖项。其语法类似于
 [`[dependencies]`][dependencies] 部分：
@@ -201,7 +200,7 @@ baz = { git = 'https://github.com/example/patched-baz.git', branch = 'my-branch'
 
 Cargo 仅查看工作空间根目录的 `Cargo.toml` 清单中的补丁设置。依赖项中定义的补丁设置将被忽略。
 
-## `[replace]` 部分
+## `[replace]` 部分 {#the-replace-section}
 
 > **注意**：`[replace]` 已弃用。您应该使用 [`[patch]`](#patch-部分) 表。
 
@@ -217,7 +216,7 @@ Cargo.toml 的这一部分可用于用其他副本覆盖依赖项。其语法类
 
 Cargo 仅查看工作空间根目录的 `Cargo.toml` 清单中的替换设置。依赖项中定义的替换设置将被忽略。
 
-## `paths` 覆盖
+## `paths` 覆盖 {#paths-overrides}
 
 有时您只是临时处理一个包，并且不想像上面的 `[patch]` 部分那样修改 `Cargo.toml`。对于这种用例，Cargo 提供了一个更有限的覆盖版本，称为 **路径覆盖**。
 
@@ -235,4 +234,5 @@ paths = ["/path/to/uuid"]
 
 
 [crates.io]: https://crates.io/
+[multiple locations]: specifying-dependencies.md#multiple-locations
 [dependencies]: specifying-dependencies.md

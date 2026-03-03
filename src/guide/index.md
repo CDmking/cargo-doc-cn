@@ -1,4 +1,4 @@
-# Cargo 指南
+# Cargo 指南 {#cargo-guide}
 
 本指南将提供您所需了解的一切，以掌握如何使用 Cargo 来开发 Rust 包。
 

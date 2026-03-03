@@ -1,6 +1,6 @@
-# Cargo 存在的原因
+# Cargo 存在的原因 {#why-cargo-exists}
 
-## 预备知识
+## 预备知识 {#preliminaries}
 
 在 Rust 中，如您所知，一个库或可执行程序被称为 [*crate*][def-crate]。Crate 使用 Rust 编译器 `rustc` 进行编译。当开始学习 Rust 时，大多数人遇到的第一段源代码是经典的“hello world”程序，他们通过直接调用 `rustc` 来编译它：
 
@@ -16,7 +16,7 @@ Hello, world!
 
 与其仅与 crate 和 `rustc` 打交道，您可以通过引入更高层次的 [*package*][def-package] 抽象和使用 [*package manager*][def-package-manager] 来避免执行上述任务所涉及的困难。
 
-## 引入：Cargo
+## 引入：Cargo {#enter-cargo}
 
 *Cargo* 是 Rust 的包管理器。它是一个工具，允许 Rust [*package*][def-package] 声明其各种依赖项，并确保您始终获得可重复的构建。
 

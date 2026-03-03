@@ -1,4 +1,4 @@
-# 依赖
+# 依赖 {#dependencies}
 
 [crates.io] 是 Rust 社区的中心化 [*package registry*][def-package-registry]（包注册中心），作为发现和下载 [package][def-package]（包）的位置。`cargo` 默认配置为使用它来查找所需的包。
 
@@ -6,7 +6,7 @@
 
 [crates.io]: https://crates.io/
 
-## 添加依赖
+## 添加依赖 {#adding-a-dependency}
 
 如果您的 `Cargo.toml` 中还没有 `[dependencies]` 部分，请添加该部分，然后列出您想要使用的 [crate][def-crate]（包）名称和版本。此示例添加了对 `time` 包的依赖：
 
