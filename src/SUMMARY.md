@@ -17,7 +17,7 @@
     * [持续集成](guide/continuous-integration.md)
     * [在 crates.io 上发布](reference/publishing.md)
     * [Cargo Home](guide/cargo-home.md)
-    * [Optimizing Build Performance](guide/build-performance.md)
+    * [优化构建性能](guide/build-performance.md)
 
 * [Cargo Reference](reference/index.md)
     * [The Manifest Format](reference/manifest.md)

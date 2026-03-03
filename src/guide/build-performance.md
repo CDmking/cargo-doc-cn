@@ -1,31 +1,31 @@
-# Optimizing Build Performance
+# 优化构建性能 {#optimizing-build-performance}
 
-Cargo configuration options and source code organization patterns can help improve build performance, by prioritizing it over other aspects which may not be as important for your circumstances.
+通过优先考虑构建性能而不是其他在您的情况下可能不那么重要的方面，Cargo 配置选项和源代码组织模式可以帮助提高构建性能。
 
-Same as when optimizing runtime performance, be sure to measure these changes against the workflows you actually care about, as we provide general guidelines and your circumstances may be different, it is possible that some of these approaches might actually make build performance worse for your use-case.
+与优化运行时性能时一样，请务必根据您实际关心的工作流来衡量这些更改，因为我们提供的是通用指南，而您的情况可能不同，其中一些方法实际上可能会使您的用例的构建性能变差。
 
-Example workflows to consider include:
-- Compiler feedback as you develop (`cargo check` after making a code change)
-- Test feedback as you develop (`cargo test` after making a code change)
-- CI builds
+需要考虑的示例工作流包括：
+- 开发过程中的编译器反馈（代码更改后的 `cargo check`）
+- 开发过程中的测试反馈（代码更改后的 `cargo test`）
+- CI 构建
 
-## Cargo and Compiler Configuration
+## Cargo 和编译器配置 {#cargo-and-compiler-configuration}
 
-Cargo uses configuration defaults that try to balance several aspects, including debuggability, runtime performance, build performance, binary size and others. This section describes several approaches for changing these defaults that should be designed to maximize build performance.
+Cargo 使用的配置默认值试图平衡多个方面，包括可调试性、运行时性能、构建性能、二进制大小等。本节描述了几种更改这些默认值的方法，这些方法应旨在最大化构建性能。
 
-Common locations to override defaults are:
-- [`Cargo.toml` manifest](../reference/profiles.md)
-  - Available to all developers contributing to your project
-  - Limited in what configuration is supported (see [#12738](https://github.com/rust-lang/cargo/issues/12738) for expanding this)
-- [`$WORKSPACE_ROOT/.cargo/config.toml` configuration file](../reference/config.md)
-  - Available to all developers contributing to your project
-  - Unlike `Cargo.toml`, this is sensitive to what directory you invoke `cargo` from (see [#2930](https://github.com/rust-lang/cargo/issues/2930))
-- [`$CARGO_HOME/.cargo/config.toml` configuration file](../reference/config.md)
-  - For a developer to control the defaults for their development
+覆盖默认值的常见位置有：
+- [`Cargo.toml` 清单](../reference/profiles.md)
+  - 所有为项目做出贡献的开发人员都可以使用
+  - 支持的配置有限（有关扩展此功能，请参见 [#12738](https://github.com/rust-lang/cargo/issues/12738)）
+- [`$WORKSPACE_ROOT/.cargo/config.toml` 配置文件](../reference/config.md)
+  - 所有为项目做出贡献的开发人员都可以使用
+  - 与 `Cargo.toml` 不同，这取决于您调用 `cargo` 的目录（请参见 [#2930](https://github.com/rust-lang/cargo/issues/2930)）
+- [`$CARGO_HOME/.cargo/config.toml` 配置文件](../reference/config.md)
+  - 供开发人员控制其开发的默认值
 
-### Reduce amount of generated debug information
+### 减少生成的调试信息量 {#reduce-amount-of-generated-debug-information}
 
-Recommendation: Add to your `Cargo.toml` or `.cargo/config.toml`:
+建议：添加到您的 `Cargo.toml` 或 `.cargo/config.toml` 中：
 
 ```toml
 [profile.dev]
@@ -39,146 +39,127 @@ inherits = "dev"
 debug = true
 ```
 
-This will:
-- Change the [`dev` profile](../reference/profiles.md#dev) (default for development commands) to:
-  - Limit [debug information](../reference/profiles.md#debug) for workspace members to what is needed for useful panic backtraces
-  - Avoid generating any debug information for dependencies
-- Provide an opt-in for when debugging via [`--profile debugging`](../reference/profiles.md#custom-profiles)
+这将：
+- 将 [`dev` 配置文件](../reference/profiles.md#dev)（开发命令的默认值）更改为：
+  - 将工作空间成员的[调试信息](../reference/profiles.md#debug)限制为提供有用 panic 回溯所需的内容
+  - 避免为依赖项生成任何调试信息
+- 在通过 [`--profile debugging`](../reference/profiles.md#custom-profiles) 进行调试时提供选择加入
 
-> **Note:** re-evaluating the `dev` profile is being tracked in [#15931](https://github.com/rust-lang/cargo/issues/15931).
+> **注意：** 重新评估 `dev` 配置文件正在 [#15931](https://github.com/rust-lang/cargo/issues/15931) 中进行跟踪。
 
-Trade-offs:
-- ✅ Faster code generation (`cargo build`)
-- ✅ Faster link times
-- ✅ Smaller disk usage of the `target` directory
-- ❌ Requires a full rebuild to have a high-quality debugger experience
+权衡：
+- ✅ 更快的代码生成（`cargo build`）
+- ✅ 更快的链接时间
+- ✅ 更小的 `target` 目录磁盘使用量
+- ❌ 需要完全重新构建才能获得高质量的调试器体验
 
-### Use an alternative codegen backend
+### 使用替代的代码生成后端 {#use-an-alternative-codegen-backend}
 
-Recommendation:
+建议：
 
-- Install the Cranelift codegen backend rustup component
+- 安装 Cranelift 代码生成后端 rustup 组件
     ```console
     $ rustup component add rustc-codegen-cranelift-preview --toolchain nightly
     ```
-- Add to your `Cargo.toml` or `.cargo/config.toml`:
+- 添加到您的 `Cargo.toml` 或 `.cargo/config.toml`：
     ```toml
     [profile.dev]
     codegen-backend = "cranelift"
     ```
-- Run Cargo with `-Z codegen-backend` or enable the [`codegen-backend`](../reference/unstable.md#codegen-backend) feature in `.cargo/config.toml`.
-  - This is required because this is currently an unstable feature.
+- 使用 `-Z codegen-backend` 运行 Cargo，或在 `.cargo/config.toml` 中启用 [`codegen-backend`](../reference/unstable.md#codegen-backend) 功能。
+  - 这是必需的，因为这是一个不稳定的功能。
 
-This will change the [`dev` profile](../reference/profiles.md#dev) to use the [Cranelift codegen backend](https://github.com/rust-lang/rustc_codegen_cranelift) for generating machine code, instead of the default LLVM backend. The Cranelift backend should generate code faster than LLVM, which should result in improved build performance.
+这将改变 [`dev` 配置文件](../reference/profiles.md#dev) 以使用 [Cranelift 代码生成后端](https://github.com/rust-lang/rustc_codegen_cranelift) 来生成机器代码，而不是默认的 LLVM 后端。Cranelift 后端应该比 LLVM 更快地生成代码，这应该会提高构建性能。
 
-Trade-offs:
-- ✅ Faster code generation (`cargo build`)
-- ❌ **Requires using nightly Rust and an [unstable Cargo feature][codegen-backend-feature]**
-- ❌ Worse runtime performance of the generated code
-  - Speeds up build part of `cargo test`, but might increase its test execution part
-- ❌ Only available for [certain targets](https://github.com/rust-lang/rustc_codegen_cranelift?tab=readme-ov-file#platform-support)
-- ❌ Might not support all Rust features (e.g. unwinding)
+权衡：
+- ✅ 更快的代码生成（`cargo build`）
+- ❌ **需要使用 nightly Rust 和一个[不稳定的 Cargo 功能][codegen-backend-feature]**
+- ❌ 生成的代码运行时性能更差
+  - 加快了 `cargo test` 的构建部分，但可能会增加其测试执行部分
+- ❌ 仅适用于[特定目标平台](https://github.com/rust-lang/rustc_codegen_cranelift?tab=readme-ov-file#platform-support)
+- ❌ 可能不支持所有 Rust 功能（例如，栈展开）
 
 [codegen-backend-feature]: ../reference/unstable.md#codegen-backend
 
-### Enable the experimental parallel frontend
+### 启用实验性的并行前端 {#enable-the-experimental-parallel-frontend}
 
-Recommendation: Add to your `.cargo/config.toml`:
+建议：添加到您的 `.cargo/config.toml`：
 
 ```toml
 [build]
 rustflags = "-Zthreads=8"
 ```
 
-This [`rustflags`][build.rustflags] will enable the [parallel frontend][parallel-frontend-blog] of the Rust compiler, and tell it to use `n` threads. The value of `n` should be chosen according to the number of cores available on your system, although there are diminishing returns. We recommend using at most `8` threads.
+这个 [`rustflags`][build.rustflags] 将启用 Rust 编译器的[并行前端][parallel-frontend-blog]，并告诉它使用 `n` 个线程。`n` 的值应根据您系统上可用的核心数来选择，尽管收益会递减。我们建议最多使用 `8` 个线程。
 
-Trade-offs:
-- ✅ Faster build times (both `cargo check` and `cargo build`)
-- ❌ **Requires using nightly Rust and an [unstable Rust feature][parallel-frontend-issue]**
+权衡：
+- ✅ 更快的构建时间（包括 `cargo check` 和 `cargo build`）
+- ❌ **需要使用 nightly Rust 和一个[不稳定的 Rust 功能][parallel-frontend-issue]**
 
 [parallel-frontend-blog]: https://blog.rust-lang.org/2023/11/09/parallel-rustc/
 [parallel-frontend-issue]: https://github.com/rust-lang/rust/issues/113349
 [build.rustflags]: ../reference/config.md#buildrustflags
 
-### Use an alternative linker
+### 使用替代的链接器 {#use-an-alternative-linker}
 
-Consider: installing and configuring an alternative linker, like [LLD](https://lld.llvm.org/), [mold](https://github.com/rui314/mold) or [wild](https://github.com/davidlattimore/wild). For example, to configure mold on Linux, you can add to your `.cargo/config.toml`:
+考虑：安装并配置替代链接器，例如 [LLD](https://lld.llvm.org/)、[mold](https://github.com/rui314/mold) 或 [wild](https://github.com/davidlattimore/wild)。例如，要在 Linux 上配置 mold，您可以添加到您的 `.cargo/config.toml`：
 
 ```toml
 [target.'cfg(target_os = "linux")']
-# mold, if you have GCC 12+
+# mold，如果您有 GCC 12+
 rustflags = ["-C", "link-arg=-fuse-ld=mold"]
 
-# mold, otherwise
+# mold，否则
 linker = "clang"
 rustflags = ["-C", "link-arg=-fuse-ld=/path/to/mold"]
 ```
 
-While dependencies may be built in parallel, linking all of your dependencies happens at once at the end of your build, which can make linking dominate your build times, especially for incremental rebuilds. Often, the linker Rust uses is already fairly fast and the gains from switching may not be worth it, but it is not always the case. For example, Linux targets besides `x86_64-unknown-linux-gnu` still use the Linux system linker which is quite slow (see [rust#39915](https://github.com/rust-lang/rust/issues/39915) for more details).
+虽然依赖项可以并行构建，但链接所有依赖项发生在构建结束时，这可能会使链接时间占主导地位，尤其是对于增量重建。通常，Rust 使用的链接器已经相当快，更换带来的收益可能不值得，但并非总是如此。例如，除了 `x86_64-unknown-linux-gnu` 之外的 Linux 目标仍然使用相当慢的 Linux 系统链接器（有关更多详细信息，请参见 [rust#39915](https://github.com/rust-lang/rust/issues/39915)）。
 
-Trade-offs:
-- ✅ Faster link times
-- ❌ Might not support all use-cases, in particular if you depend on C or C++ dependencies
+权衡：
+- ✅ 更快的链接时间
+- ❌ 可能不支持所有用例，特别是如果您依赖 C 或 C++ 依赖项
 
-### Resolve features for the whole workspace
+### 为整个工作空间解析功能 {#resolve-features-for-the-whole-workspace}
 
-Consider: adding to your project's `.cargo/config.toml`
+考虑：添加到您项目的 `.cargo/config.toml`
 
 ```toml
 [resolver]
 feature-unification = "workspace"
 ```
 
-When invoking `cargo`,
-[features get activated][resolver-features] based on which workspace members you have selected.
-However, when contributing to an application,
-you may need to build and test various packages within the application,
-which can cause extraneous rebuilds because different sets of features may be activated for common dependencies.
-With [`feature-unification`][feature-unification],
-you can reuse more dependency builds by ensuring the same set of dependency features are activated,
-independent of which package you are currently building and testing.
+当调用 `cargo` 时，[功能会根据您选择的工作空间成员被激活][resolver-features]。然而，当为应用程序做出贡献时，您可能需要构建和测试应用程序中的各种包，这可能导致额外的重建，因为为公共依赖项可能激活了不同的功能集。使用 [`feature-unification`][feature-unification]，您可以通过确保激活相同的依赖项功能集来重用更多的依赖项构建，而独立于当前正在构建和测试的包。
 
-Trade-offs:
-- ✅ Fewer rebuilds when building different packages in a workspace
-- ❌ **Requires using nightly Rust and an [unstable Cargo feature][feature-unification]**
-- ❌ A package activating a feature can mask bugs in other packages that should activate it but don't
-- ❌ If the feature unification from `--workspace` doesn't work for you, then this won't either
+权衡：
+- ✅ 在构建工作空间中的不同包时，减少重建次数
+- ❌ **需要使用 nightly Rust 和一个[不稳定的 Cargo 功能][feature-unification]**
+- ❌ 一个包激活一个功能可能会掩盖其他应该激活但未激活该功能的包中的错误
+- ❌ 如果 `--workspace` 的功能统一对您不起作用，那么这个也不会起作用
 
 [resolver-features]: ../reference/resolver.md#features
 [feature-unification]: ../reference/unstable.md#feature-unification
 
-## Reducing built code
+## 减少构建的代码 {#reducing-built-code}
 
-### Removing unused dependencies
+### 移除未使用的依赖项 {#removing-unused-dependencies}
 
-Recommendation: Periodically review unused dependencies for removal using third-party tools like
-[cargo-machete](https://crates.io/crates/cargo-machete),
-[cargo-udeps](https://crates.io/crates/cargo-udeps),
-[cargo-shear](https://crates.io/crates/cargo-shear).
+建议：定期使用第三方工具（如 [cargo-machete](https://crates.io/crates/cargo-machete)、[cargo-udeps](https://crates.io/crates/cargo-udeps)、[cargo-shear](https://crates.io/crates/cargo-shear)）审查未使用的依赖项以进行移除。
 
-When changing code,
-it can be easy to miss that a dependency is no longer used and can be removed.
+更改代码时，很容易忽略某个依赖项不再使用，可以将其移除。
 
-> **Note:** native support for this in Cargo is being tracked in [#15813](https://github.com/rust-lang/cargo/issues/15813).
+> **注意：** Cargo 中对这一功能的原生支持正在 [#15813](https://github.com/rust-lang/cargo/issues/15813) 中进行跟踪。
 
-Trade-offs:
-- ✅ Faster full build and link times
-- ❌ May incorrectly flag dependencies as unused or miss some
+权衡：
+- ✅ 更快的完整构建和链接时间
+- ❌ 可能错误地将依赖项标记为未使用或遗漏某些依赖项
 
-### Removing unused features from dependencies
+### 移除依赖项中未使用的功能 {#removing-unused-features-from-dependencies}
 
-Recommendation: Periodically review unused features from dependencies for removal using third-party tools like
-[cargo-features-manager](https://crates.io/crates/cargo-features-manager),
-[cargo-unused-features](https://crates.io/crates/cargo-unused-features).
+建议：定期使用第三方工具（如 [cargo-features-manager](https://crates.io/crates/cargo-features-manager)、[cargo-unused-features](https://crates.io/crates/cargo-unused-features)）审查依赖项中未使用的功能以进行移除。
 
-When changing code,
-it can be easy to miss that a dependency's feature is no longer used and can be removed.
-This can reduce the number of transitive dependencies being built or
-reduce the amount of code within a crate being built.
-When removing features, extra caution is needed because features
-may also be used for desired behavior or performance changes
-which may not always be obvious from compiling or testing.
+更改代码时，很容易忽略某个依赖项的功能不再使用，可以将其移除。这可以减少正在构建的传递依赖项的数量，或者减少正在构建的 crate 内的代码量。移除功能时需要格外小心，因为功能也可能用于期望的行为或性能更改，这些可能并不总是从编译或测试中显而易见。
 
-Trade-offs:
-- ✅ Faster full build and link times
-- ❌ May incorrectly flag features as unused
+权衡：
+- ✅ 更快的完整构建和链接时间
+- ❌ 可能错误地将功能标记为未使用
