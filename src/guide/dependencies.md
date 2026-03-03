@@ -1,4 +1,4 @@
-# 依赖 {#dependencies}
+# 依赖项 {#dependencies}
 
 [crates.io] 是 Rust 社区的中心化 [*package registry*][def-package-registry]（包注册中心），作为发现和下载 [package][def-package]（包）的位置。`cargo` 默认配置为使用它来查找所需的包。
 
