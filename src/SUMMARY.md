@@ -14,7 +14,7 @@
     * [包布局](guide/project-layout.md)
     * [Cargo.toml vs Cargo.lock](guide/cargo-toml-vs-cargo-lock.md)
     * [测试](guide/tests.md)
-    * [Continuous Integration](guide/continuous-integration.md)
+    * [持续集成](guide/continuous-integration.md)
     * [Publishing on crates.io](reference/publishing.md)
     * [Cargo Home](guide/cargo-home.md)
     * [Optimizing Build Performance](guide/build-performance.md)

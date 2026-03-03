@@ -1,12 +1,12 @@
-# Continuous Integration
+# 持续集成 {#continuous-integration}
 
-## Getting Started
+## 开始使用 {#getting-started}
 
-A basic CI will build and test your projects:
+基础的 CI 会构建并测试您的项目：
 
 ### GitHub Actions
 
-To test your package on GitHub Actions, here is a sample `.github/workflows/ci.yml` file:
+要在 GitHub Actions 上测试您的包，以下是一个示例 `.github/workflows/ci.yml` 文件：
 
 ```yaml
 name: Cargo Build & Test
@@ -15,7 +15,7 @@ on:
   push:
   pull_request:
 
-env: 
+env:
   CARGO_TERM_COLOR: always
 
 jobs:
@@ -33,14 +33,14 @@ jobs:
       - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
       - run: cargo build --verbose
       - run: cargo test --verbose
-  
+
 ```
 
-This will test all three release channels (note a failure in any toolchain version will fail the entire job). You can also click `"Actions" > "new workflow"` in the GitHub UI and select Rust to add the [default configuration](https://github.com/actions/starter-workflows/blob/main/ci/rust.yml) to your repo. See [GitHub Actions documentation](https://docs.github.com/en/actions) for more information.
+这将测试所有三个发布通道（注意任何工具链版本的失败都会导致整个作业失败）。您也可以在 GitHub UI 中点击 `"Actions" > "new workflow"` 并选择 Rust，将[默认配置](https://github.com/actions/starter-workflows/blob/main/ci/rust.yml)添加到您的仓库。更多信息请参阅 [GitHub Actions 文档](https://docs.github.com/en/actions)。
 
 ### GitLab CI
 
-To test your package on GitLab CI, here is a sample `.gitlab-ci.yml` file:
+要在 GitLab CI 上测试您的包，以下是一个示例 `.gitlab-ci.yml` 文件：
 
 ```yaml
 stages:
@@ -62,16 +62,12 @@ rust-nightly:
   allow_failure: true
 ```
 
-This will test on the stable channel and nightly channel, but any
-breakage in nightly will not fail your overall build. Please see the
-[GitLab CI documentation](https://docs.gitlab.com/ce/ci/yaml/index.html) for more
-information.
+这将在稳定通道和 nightly 通道上进行测试，但 nightly 通道中的任何故障不会导致整个构建失败。更多信息请参阅 [GitLab CI 文档](https://docs.gitlab.com/ce/ci/yaml/index.html)。
 
 ### builds.sr.ht
 
-To test your package on sr.ht, here is a sample `.build.yml` file.
-Be sure to change `<your repo>` and `<your project>` to the repo to clone and
-the directory where it was cloned.
+要在 sr.ht 上测试您的包，以下是一个示例 `.build.yml` 文件。
+请务必将 `<your repo>` 和 `<your project>` 替换为要克隆的仓库和克隆后的目录。
 
 ```yaml
 image: archlinux
@@ -100,65 +96,53 @@ tasks:
       rustup run nightly cargo doc --no-deps ||:
 ```
 
-This will test and build documentation on the stable channel and nightly
-channel, but any breakage in nightly will not fail your overall build. Please
-see the [builds.sr.ht documentation](https://man.sr.ht/builds.sr.ht/) for more
-information.
-
+这将在稳定通道和 nightly 通道上测试并构建文档，但 nightly 通道中的任何故障不会导致整个构建失败。更多信息请参阅 [builds.sr.ht 文档](https://man.sr.ht/builds.sr.ht/)。
 
 ### CircleCI
 
-To test your package on CircleCI, here is a sample `.circleci/config.yml` file:
+要在 CircleCI 上测试您的包，以下是一个示例 `.circleci/config.yml` 文件：
 
 ```yaml
 version: 2.1
 jobs:
   build:
     docker:
-      # check https://circleci.com/developer/images/image/cimg/rust#image-tags for latest
+      # 检查 https://circleci.com/developer/images/image/cimg/rust#image-tags 获取最新版本
       - image: cimg/rust:1.77.2
     steps:
       - checkout
       - run: cargo test
 ```
 
-To run more complex pipelines, including flaky test detection, caching, and artifact management, please see [CircleCI Configuration Reference](https://circleci.com/docs/configuration-reference/).
+要运行更复杂的流水线，包括检测不稳定测试、缓存和工件管理，请参阅 [CircleCI 配置参考](https://circleci.com/docs/configuration-reference/)。
 
-## Verifying Latest Dependencies
+## 验证最新依赖 {#verifying-latest-dependencies}
 
-When [specifying dependencies](../reference/specifying-dependencies.md) in
-`Cargo.toml`, they generally match a range of versions.
-Exhaustively testing all version combination would be unwieldy.
-Verifying the latest versions would at least test for users who run [`cargo
-add`] or [`cargo install`].
+在 `Cargo.toml` 中[指定依赖](../reference/specifying-dependencies.md)时，它们通常匹配一个版本范围。详尽测试所有版本组合将非常繁琐。至少验证最新版本可以测试那些运行 [`cargo add`] 或 [`cargo install`] 的用户。
 
-When testing the latest versions some considerations are:
-- Minimizing external factors affecting local development or CI
-- Rate of new dependencies being published
-- Level of risk a project is willing to accept
-- CI costs, including indirect costs like if a CI service has a maximum for
-  parallel runners, causing new jobs to be serialized when at the maximum.
+测试最新版本时的一些考虑因素包括：
+- 最小化影响本地开发或 CI 的外部因素
+- 新依赖发布的频率
+- 项目愿意接受的风险级别
+- CI 成本，包括间接成本，例如如果 CI 服务有并行运行器的上限，导致在达到上限时新作业被序列化
 
-Some potential solutions include:
-- [Not checking in the `Cargo.lock`](../faq.md#why-have-cargolock-in-version-control)
-  - Depending on PR velocity, many versions may go untested
-  - This comes at the cost of determinism
-- Have a CI job verify the latest dependencies but mark it to "continue on failure"
-  - Depending on the CI service, failures might not be obvious
-  - Depending on PR velocity, may use more resources than necessary
-- Have a scheduled CI job to verify latest dependencies
-  - A hosted CI service may disable scheduled jobs for repositories that
-    haven't been touched in a while, affecting passively maintained packages
-  - Depending on the CI service, notifications might not be routed to people
-    who can act on the failure
-  - If not balanced with dependency publish rate, may not test enough versions
-    or may do redundant testing
-- Regularly update dependencies through PRs, like with [Dependabot] or [RenovateBot]
-  - Can isolate dependencies to their own PR or roll them up into a single PR
-  - Only uses the resources necessary
-  - Can configure the frequency to balance CI resources and coverage of dependency versions
+一些潜在的解决方案包括：
+- [不提交 `Cargo.lock`](../faq.md#why-have-cargolock-in-version-control)
+  - 根据 PR 的频率，许多版本可能未经测试
+  - 这会牺牲确定性
+- 让一个 CI 作业验证最新依赖，但标记为“失败时继续”
+  - 根据 CI 服务的不同，失败可能不明显
+  - 根据 PR 的频率，可能使用比必要更多的资源
+- 安排一个定时 CI 作业来验证最新依赖
+  - 托管的 CI 服务可能会停用一段时间未触及的仓库的定时作业，影响被动维护的包
+  - 根据 CI 服务的不同，通知可能无法路由到可以处理失败的人员
+  - 如果没有与依赖发布频率平衡，可能测试的版本不足或进行冗余测试
+- 通过 PR 定期更新依赖，例如使用 [Dependabot] 或 [RenovateBot]
+  - 可以将依赖隔离到它们自己的 PR 中，或将它们合并到一个 PR 中
+  - 仅使用必要的资源
+  - 可以配置频率以平衡 CI 资源和依赖版本的覆盖范围
 
-An example CI job to verify latest dependencies, using GitHub Actions:
+使用 GitHub Actions 验证最新依赖的 CI 作业示例：
 ```yaml
 jobs:
   latest_deps:
@@ -174,22 +158,20 @@ jobs:
       - run: cargo build --verbose
       - run: cargo test --verbose
 ```
-Notes:
-- [`CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS`](../reference/config.md#resolverincompatible-rust-versions) is set to ensure the [resolver](../reference/resolver.md) doesn't limit selected dependencies because of your project's [Rust version](../reference/rust-version.md).
+注意：
+- 设置 [`CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS`](../reference/config.md#resolverincompatible-rust-versions) 以确保[解析器](../reference/resolver.md)不会因为您项目的 [Rust 版本](../reference/rust-version.md)而限制选择的依赖。
 
-For projects with higher risks of per-platform or per-Rust version failures,
-more combinations may want to be tested.
+对于每个平台或每个 Rust 版本失败风险较高的项目，可能需要测试更多组合。
 
-## Verifying `rust-version`
+## 验证 `rust-version` {#verifying-rust-version}
 
-When publishing packages that specify [`rust-version`](../reference/manifest.md#the-rust-version-field),
-it is important to verify the correctness of that field.
+发布指定了 [`rust-version`](../reference/manifest.md#the-rust-version-field) 的包时，验证该字段的正确性非常重要。
 
-Some third-party tools that can help with this include:
+一些可用于此目的的第三方工具包括：
 - [`cargo-msrv`](https://crates.io/crates/cargo-msrv)
 - [`cargo-hack`](https://crates.io/crates/cargo-hack)
 
-An example of one way to do this, using GitHub Actions:
+一种使用 GitHub Actions 的示例方法：
 ```yaml
 jobs:
   msrv:
@@ -199,10 +181,10 @@ jobs:
     - uses: taiki-e/install-action@cargo-hack
     - run: cargo hack check --rust-version --workspace --all-targets --ignore-private
 ```
-This tries to balance thoroughness with turnaround time:
-- A single platform is used as most projects are platform-agnostic, trusting platform-specific dependencies to verify their behavior.
-- `cargo check` is used as most issues contributors will run into are API availability and not behavior.
-- Unpublished packages are skipped as this assumes only consumers of the verified project, through a registry, will care about `rust-version`.
+这试图在彻底性和周转时间之间取得平衡：
+- 使用单一平台，因为大多数项目与平台无关，信任平台特定的依赖来验证它们的行为。
+- 使用 `cargo check`，因为贡献者遇到的大多数问题是 API 可用性，而不是行为。
+- 跳过来发布的包，因为这假设只有通过注册表使用已验证项目的消费者才会关心 `rust-version`。
 
 [`cargo add`]: ../commands/cargo-add.md
 [`cargo install`]: ../commands/cargo-install.md
