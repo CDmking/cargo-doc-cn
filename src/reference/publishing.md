@@ -1,101 +1,68 @@
-# Publishing on crates.io
+# 在 crates.io 上发布 {#publishing-on-cratesio}
 
-Once you've got a library that you'd like to share with the world, it's time to
-publish it on [crates.io]! Publishing a crate is when a specific
-version is uploaded to be hosted on [crates.io].
+当您有了一个想要与世界共享的库时，是时候在 [crates.io] 上发布它了！发布 crate 是指将特定版本上传到 [crates.io] 进行托管。
 
-Take care when publishing a crate, because a publish is **permanent**. The
-version can never be overwritten, and the code cannot be deleted. There is no
-limit to the number of versions which can be published, however.
+发布 crate 时要小心，因为发布是**永久性**的。版本永远不能被覆盖，代码也不能被删除。不过，可以发布的版本数量没有限制。
 
-## Before your first publish
+## 首次发布之前 {#before-your-first-publish}
 
-First things first, you’ll need an account on [crates.io] to acquire
-an API token. To do so, [visit the home page][crates.io] and log in via a GitHub
-account (required for now). You will also need to provide and verify your email
-address on the [Account Settings](https://crates.io/settings/profile) page. Once
-that is done [create an API token](https://crates.io/settings/tokens), make sure
-you copy it. Once you leave the page you will not be able to see it again.
+首先，您需要在 [crates.io] 上注册一个账户以获取 API 令牌。为此，[访问首页][crates.io] 并通过 GitHub 账户登录（目前需要）。您还需要在 [账户设置](https://crates.io/settings/profile) 页面上提供并验证您的电子邮件地址。完成此操作后，[创建一个 API 令牌](https://crates.io/settings/tokens)，确保复制它。一旦离开该页面，您将无法再次看到它。
 
-Then run the [`cargo login`] command.
+然后运行 [`cargo login`] 命令。
 
 ```console
 $ cargo login
 ```
 
-Then at the prompt put in the token specified.
+然后在提示符处输入指定的令牌。
 ```console
 please paste the API Token found on https://crates.io/me below
 abcdefghijklmnopqrstuvwxyz012345
 ```
 
-This command will inform Cargo of your API token and store it locally in your
-`~/.cargo/credentials.toml`. Note that this token is a **secret** and should not be
-shared with anyone else. If it leaks for any reason, you should revoke it
-immediately.
+此命令将告知 Cargo 您的 API 令牌并将其本地存储在 `~/.cargo/credentials.toml` 中。请注意，此令牌是**秘密**，不应与其他人共享。如果因任何原因泄露，您应立即撤销它。
 
-> **Note**: The [`cargo logout`] command can be used to remove the token from
-> `credentials.toml`. This can be useful if you no longer need it stored on
-> the local machine.
+> **注意**：[`cargo logout`] 命令可用于从 `credentials.toml` 中删除令牌。如果您不再需要将其存储在本地机器上，这可能很有用。
 
-## Before publishing a new crate
+## 发布新 crate 之前 {#before-publishing-a-new-crate}
 
-Keep in mind that crate names on [crates.io] are allocated on a first-come-first-serve
-basis. Once a crate name is taken, it cannot be used for another crate.
+请注意，[crates.io] 上的 crate 名称是按先到先得的原则分配的。一旦一个 crate 名称被占用，就不能用于另一个 crate。
 
-Check out the [metadata you can specify](manifest.md) in `Cargo.toml` to
-ensure your crate can be discovered more easily! Before publishing, make sure
-you have filled out the following fields:
+请查看在 `Cargo.toml` 中[可以指定的元数据](manifest.md)以确保您的 crate 更容易被发现！在发布之前，请确保您已填写以下字段：
 
-- [`license` or `license-file`]
+- [`license` 或 `license-file`]
 - [`description`]
 - [`homepage`]
 - [`repository`]
 - [`readme`]
 
-It would also be a good idea to include some [`keywords`] and [`categories`],
-though they are not required.
+包含一些[`keywords`] 和 [`categories`] 也是个好主意，尽管它们不是必需的。
 
-If you are publishing a library, you may also want to consult the [Rust API
-Guidelines].
+如果您正在发布一个库，您可能还希望参考 [Rust API 指南]。
 
-### Packaging a crate
+### 打包 crate {#packaging-a-crate}
 
-The next step is to package up your crate and upload it to [crates.io]. For
-this we’ll use the [`cargo publish`] subcommand. This command performs the following
-steps:
+下一步是打包您的 crate 并将其上传到 [crates.io]。为此，我们将使用 [`cargo publish`] 子命令。此命令执行以下步骤：
 
-1. Perform some verification checks on your package.
-2. Compress your source code into a `.crate` file.
-3. Extract the `.crate` file into a temporary directory and verify that it
-   compiles.
-4. Upload the `.crate` file to [crates.io].
-5. The registry will perform some additional checks on the uploaded package
-   before adding it.
+1. 对您的包执行一些验证检查。
+2. 将您的源代码压缩成 `.crate` 文件。
+3. 将 `.crate` 文件提取到临时目录并验证其是否编译。
+4. 将 `.crate` 文件上传到 [crates.io]。
+5. 注册表将在添加上传的包之前执行一些额外的检查。
 
-It is recommended that you first run `cargo publish --dry-run` (or [`cargo
-package`] which is equivalent) to ensure there aren't any warnings or errors
-before publishing. This will perform the first three steps listed above.
+建议您首先运行 `cargo publish --dry-run`（或等效的 [`cargo package`]）以确保在发布之前没有任何警告或错误。这将执行上面列出的前三个步骤。
 
 ```console
 $ cargo publish --dry-run
 ```
 
-You can inspect the generated `.crate` file in the `target/package` directory.
-[crates.io] currently has a 10MB size limit on the `.crate` file. You may want
-to check the size of the `.crate` file to ensure you didn't accidentally
-package up large assets that are not required to build your package, such as
-test data, website documentation, or code generation. You can check which
-files are included with the following command:
+您可以在 `target/package` 目录中检查生成的 `.crate` 文件。[crates.io] 目前对 `.crate` 文件有 10MB 的大小限制。您可能希望检查 `.crate` 文件的大小，以确保您没有意外打包不需要构建包的大型资源，例如测试数据、网站文档或代码生成。您可以使用以下命令检查包含了哪些文件：
 
 ```console
 $ cargo package --list
 ```
 
-Cargo will automatically ignore files ignored by your version control system
-when packaging, but if you want to specify an extra set of files to ignore you
-can use the [`exclude` key](manifest.md#the-exclude-and-include-fields) in the
-manifest:
+Cargo 在打包时会自动忽略版本控制系统忽略的文件，但如果您想指定一组额外忽略的文件，可以在清单中使用 [`exclude` 键](manifest.md#the-exclude-and-include-fields)：
 
 ```toml
 [package]
@@ -106,8 +73,7 @@ exclude = [
 ]
 ```
 
-If you’d rather explicitly list the files to include, Cargo also supports an
-[`include` key](manifest.md#the-exclude-and-include-fields), which if set, overrides the `exclude` key:
+如果您希望明确列出要包含的文件，Cargo 还支持 [`include` 键](manifest.md#the-exclude-and-include-fields)，如果设置，它将覆盖 `exclude` 键：
 
 ```toml
 [package]
@@ -117,71 +83,53 @@ include = [
 ]
 ```
 
-## Uploading the crate
+## 上传 crate {#uploading-the-crate}
 
-When you are ready to publish, use the [`cargo publish`] command
-to upload to [crates.io]:
+当您准备好发布时，使用 [`cargo publish`] 命令上传到 [crates.io]：
 
 ```console
 $ cargo publish
 ```
 
-And that’s it, you’ve now published your first crate!
+就是这样，您现在已经发布了您的第一个 crate！
 
-## Publishing a new version of an existing crate
+## 发布现有 crate 的新版本 {#publishing-a-new-version-of-an-existing-crate}
 
-In order to release a new version, change [the `version` value](manifest.md#the-version-field) specified in your `Cargo.toml` manifest.
-Keep in mind [the SemVer rules](semver.md) which provide guidelines on what is a compatible change.
-Then run [`cargo publish`] as described above to upload the new version.
+要发布新版本，请更改 `Cargo.toml` 清单中指定的[`version` 值](manifest.md#the-version-field)。请记住[语义化版本规则](semver.md)，它提供了关于什么是兼容性更改的指南。然后运行如上所述的 [`cargo publish`] 以上传新版本。
 
-> **Recommendation:** Consider the full release process and automate what you can.
+> **建议：** 考虑完整的发布流程，并尽可能自动化。
 >
-> Each version should include:
-> - A changelog entry, preferably [manually curated](https://keepachangelog.com/en/1.0.0/) though a generated one is better than nothing
-> - A [git tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging) pointing to the published commit
+> 每个版本应包括：
+> - 更新日志条目，最好是[手动整理的](https://keepachangelog.com/en/1.0.0/)，尽管生成的也比没有好
+> - 指向已发布提交的 [git 标签](https://git-scm.com/book/en/v2/Git-Basics-Tagging)
 >
-> Examples of third-party tools that are representative of different workflows include (in alphabetical order):
+> 代表不同工作流程的第三方工具示例（按字母顺序排列）：
 > - [cargo-release](https://crates.io/crates/cargo-release)
 > - [cargo-smart-release](https://crates.io/crates/cargo-smart-release)
 > - [release-plz](https://crates.io/crates/release-plz)
 >
-> For more, see [crates.io](https://crates.io/search?q=cargo%20release).
+> 更多信息，请参见 [crates.io](https://crates.io/search?q=cargo%20release)。
 
-## Managing a crates.io-based crate
+## 管理基于 crates.io 的 crate {#managing-a-cratesio-based-crate}
 
-Management of crates is primarily done through the command line `cargo` tool
-rather than the [crates.io] web interface. For this, there are a few subcommands
-to manage a crate.
+crate 的管理主要通过命令行 `cargo` 工具完成，而不是通过 [crates.io] 网络界面。为此，有几个子命令来管理 crate。
 
 ### `cargo yank`
 
-Occasions may arise where you publish a version of a crate that actually ends up
-being broken for one reason or another (syntax error, forgot to include a file,
-etc.). For situations such as this, Cargo supports a “yank” of a version of a
-crate.
+有时您可能会发布一个实际上由于某种原因（语法错误、忘记包含文件等）而损坏的 crate 版本。对于这种情况，Cargo 支持对 crate 版本进行“撤回”。
 
 ```console
 $ cargo yank --version 1.0.1
 $ cargo yank --version 1.0.1 --undo
 ```
 
-A yank **does not** delete any code. This feature is not intended for deleting
-accidentally uploaded secrets, for example. If that happens, you must reset
-those secrets immediately.
+撤回**不会**删除任何代码。此功能不适用于删除意外上传的密钥等。如果发生这种情况，您必须立即重置这些密钥。
 
-The semantics of a yanked version are that no new dependencies can be created
-against that version, but all existing dependencies continue to work. One of the
-major goals of [crates.io] is to act as a permanent archive of crates that does
-not change over time, and allowing deletion of a version would go against this
-goal. Essentially a yank means that all packages with a `Cargo.lock` will not
-break, while any future `Cargo.lock` files generated will not list the yanked
-version.
+撤回版本的语义是：不能创建针对该版本的新依赖，但所有现有的依赖继续工作。[crates.io] 的主要目标之一是充当不会随时间改变的 crate 的永久存档，允许删除版本会违背这一目标。本质上，撤回意味着所有具有 `Cargo.lock` 的包都不会损坏，而任何将来生成的 `Cargo.lock` 文件将不会列出被撤回的版本。
 
 ### `cargo owner`
 
-A crate is often developed by more than one person, or the primary maintainer
-may change over time! The owner of a crate is the only person allowed to publish
-new versions of the crate, but an owner may designate additional owners.
+一个 crate 通常由多人开发，或者主要维护者可能会随时间变化！crate 的所有者是唯一被允许发布 crate 新版本的人，但所有者可以指定其他所有者。
 
 ```console
 $ cargo owner --add github-handle
@@ -190,94 +138,54 @@ $ cargo owner --add github:rust-lang:owners
 $ cargo owner --remove github:rust-lang:owners
 ```
 
-The owner IDs given to these commands must be GitHub user names or GitHub teams.
+这些命令的所有者 ID 必须是 GitHub 用户名或 GitHub 团队。
 
-If a user name is given to `--add`, that user is invited as a “named” owner, with
-full rights to the crate. In addition to being able to publish or yank versions
-of the crate, they have the ability to add or remove owners, *including* the
-owner that made *them* an owner. Needless to say, you shouldn’t make people you
-don’t fully trust into a named owner. In order to become a named owner, a user
-must have logged into [crates.io] previously.
+如果给 `--add` 一个用户名，则该用户被邀请为“命名”所有者，拥有对 crate 的完全权限。除了能够发布或撤回 crate 版本外，他们还有能力添加或删除所有者，*包括*使他们成为所有者的所有者。不用说，您不应该让您不完全信任的人成为命名所有者。为了成为命名所有者，用户必须先前登录过 [crates.io]。
 
-If a team name is given to `--add`, that team is invited as a “team” owner, with
-restricted right to the crate. While they have permission to publish or yank
-versions of the crate, they *do not* have the ability to add or remove owners.
-In addition to being more convenient for managing groups of owners, teams are
-just a bit more secure against owners becoming malicious.
+如果给 `--add` 一个团队名，则该团队被邀请为“团队”所有者，对 crate 拥有受限权限。虽然他们有权发布或撤回 crate 版本，但他们*没有*能力添加或删除所有者。除了更方便地管理所有者组之外，团队在防止所有者变得恶意方面也更安全一些。
 
-The syntax for teams is currently `github:org:team` (see examples above).
-In order to invite a team as an owner one must be a member of that team. No
-such restriction applies to removing a team as an owner.
+团队的语法目前是 `github:org:team`（请参见上面的示例）。要邀请一个团队作为所有者，您必须是该团队的成员。删除团队作为所有者则没有这样的限制。
 
-## GitHub permissions
+## GitHub 权限 {#github-permissions}
 
-Team membership is not something GitHub provides simple public access to, and it
-is likely for you to encounter the following message when working with them:
+团队成员资格不是 GitHub 提供的简单公开访问权限，当您使用它们时可能会遇到以下消息：
 
-> It looks like you don’t have permission to query a necessary property from
-GitHub to complete this request. You may need to re-authenticate on [crates.io]
-to grant permission to read GitHub org memberships.
+> 看起来您没有权限从 GitHub 查询必要属性以完成此请求。您可能需要在 [crates.io] 上重新进行身份验证以授予读取 GitHub 组织成员资格的权限。
 
-This is basically a catch-all for “you tried to query a team, and one of the
-five levels of membership access control denied this”. That is not an
-exaggeration. GitHub’s support for team access control is Enterprise Grade.
+这基本上是一个笼统的说法，意思是“您尝试查询一个团队，但五级成员访问控制中的某一个拒绝了此请求”。这并非夸张。GitHub 对团队访问控制的支持是企业级的。
 
-The most likely cause of this is simply that you last logged in before this
-feature was added. We originally requested *no* permissions from GitHub when
-authenticating users, because we didn’t actually ever use the user’s token for
-anything other than logging them in. However to query team membership on your
-behalf, we now require [the `read:org` scope][oauth-scopes].
+这最可能的原因仅仅是您上次登录是在此功能添加之前。我们最初在验证用户时没有向 GitHub 请求*任何*权限，因为我们实际上从未使用用户的令牌进行除登录之外的任何操作。然而，为了代表您查询团队成员资格，我们现在需要 [`read:org` 作用域][oauth-scopes]。
 
-You are free to deny us this scope, and everything that worked before teams
-were introduced will keep working. However you will never be able to add a team
-as an owner, or publish a crate as a team owner. If you ever attempt to do this,
-you will get the error above. You may also see this error if you ever try to
-publish a crate that you don’t own at all, but otherwise happens to have a team.
+您可以自由地拒绝我们此作用域，并且在团队功能引入之前的所有功能将继续工作。但是，您将永远无法添加团队作为所有者，或者以团队所有者的身份发布 crate。如果您尝试这样做，您将收到上述错误。如果您尝试发布一个您根本不拥有的 crate，但恰好有一个团队，您可能也会看到此错误。
 
-If you ever change your mind, or just aren’t sure if [crates.io] has sufficient
-permission, you can always go to <https://crates.io/> and re-authenticate,
-which will prompt you for permission if [crates.io] doesn’t have all the scopes
-it would like to.
+如果您改变主意，或者只是不确定 [crates.io] 是否有足够的权限，您可以随时访问 <https://crates.io/> 并重新进行身份验证，如果 [crates.io] 没有它想要的所有作用域，它将提示您授权。
 
-An additional barrier to querying GitHub is that the organization may be
-actively denying third party access. To check this, you can go to:
+查询 GitHub 的另一个障碍是组织可能正在积极拒绝第三方访问。要检查这一点，您可以访问：
 
 ```text
 https://github.com/organizations/:org/settings/oauth_application_policy
 ```
 
-where `:org` is the name of the organization (e.g., `rust-lang`). You may see
-something like:
+其中 `:org` 是组织名称（例如 `rust-lang`）。您可能会看到类似以下内容：
 
-![Organization Access Control](../images/org-level-acl.png)
+![组织访问控制](../images/org-level-acl.png)
 
-Where you may choose to explicitly remove [crates.io] from your organization’s
-blacklist, or simply press the “Remove Restrictions” button to allow all third
-party applications to access this data.
+您可以选择从组织黑名单中明确删除 [crates.io]，或者直接按下“移除限制”按钮以允许所有第三方应用程序访问此数据。
 
-Alternatively, when [crates.io] requested the `read:org` scope, you could have
-explicitly whitelisted [crates.io] querying the org in question by pressing
-the “Grant Access” button next to its name:
+或者，当 [crates.io] 请求 `read:org` 作用域时，您可以通过按下其名称旁边的“授予访问”按钮明确允许 [crates.io] 查询相关组织：
 
-![Authentication Access Control](../images/auth-level-acl.png)
+![身份验证访问控制](../images/auth-level-acl.png)
 
-### Troubleshooting GitHub team access errors
+### GitHub 团队访问错误排查 {#troubleshooting-github-team-access-errors}
 
-When trying to add a GitHub team as crate owner, you may see an error like:
+尝试将 GitHub 团队添加为 crate 所有者时，您可能会看到如下错误：
 
 ```text
 error: failed to invite owners to crate <crate_name>: api errors (status 200 OK): could not find the github team org/repo
 ```
-In that case, you should go to [the GitHub Application settings page] and
-check if crates.io is listed in the `Authorized OAuth Apps` tab.
-If it isn't, you should go to <https://crates.io/> and authorize it.
-Then go back to the Application Settings page on GitHub, click on the
-crates.io application in the list, and make sure you or your organization is
-listed in the "Organization access" list with a green check mark. If there's
-a button labeled `Grant` or `Request`, you should grant the access or
-request the org owner to do so.
+在这种情况下，您应该访问 [GitHub 应用程序设置页面] 并检查 crates.io 是否列在 `Authorized OAuth Apps` 选项卡中。如果没有，您应该访问 <https://crates.io/> 并授权它。然后返回 GitHub 上的应用程序设置页面，单击列表中的 crates.io 应用程序，并确保您或您的组织列在“组织访问”列表中并带有绿色勾号。如果有标记为 `Grant` 或 `Request` 的按钮，您应该授予访问权限或请求组织所有者这样做。
 
-[Rust API Guidelines]: https://rust-lang.github.io/api-guidelines/
+[Rust API 指南]: https://rust-lang.github.io/api-guidelines/
 [`cargo login`]: ../commands/cargo-login.md
 [`cargo logout`]: ../commands/cargo-logout.md
 [`cargo package`]: ../commands/cargo-package.md
@@ -287,9 +195,9 @@ request the org owner to do so.
 [`documentation`]: manifest.md#the-documentation-field
 [`homepage`]: manifest.md#the-homepage-field
 [`keywords`]: manifest.md#the-keywords-field
-[`license` or `license-file`]: manifest.md#the-license-and-license-file-fields
+[`license` 或 `license-file`]: manifest.md#the-license-and-license-file-fields
 [`readme`]: manifest.md#the-readme-field
 [`repository`]: manifest.md#the-repository-field
 [crates.io]: https://crates.io/
 [oauth-scopes]: https://developer.github.com/apps/building-oauth-apps/understanding-scopes-for-oauth-apps/
-[the GitHub Application settings page]: https://github.com/settings/applications
+[GitHub 应用程序设置页面]: https://github.com/settings/applications
