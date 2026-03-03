@@ -25,7 +25,7 @@
         * [Rust 版本](reference/rust-version.md)
     * [工作空间](reference/workspaces.md)
     * [指定依赖项](reference/specifying-dependencies.md)
-        * [覆盖依赖](reference/overriding-dependencies.md)
+        * [覆盖依赖项](reference/overriding-dependencies.md)
         * [源替换](reference/source-replacement.md)
         * [依赖项解析](reference/resolver.md)
     * [功能](reference/features.md)
