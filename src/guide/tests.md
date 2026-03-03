@@ -1,13 +1,8 @@
-# Tests
+# 测试 {#tests}
 
-Cargo can run your tests with the `cargo test` command. Cargo looks for tests
-to run in two places: in each of your `src` files and any tests in `tests/`.
-Tests in your `src` files should be unit tests and [documentation tests].
-Tests in `tests/` should be integration-style tests. As such, you’ll need to
-import your crates into the files in `tests`.
+Cargo 可以通过 `cargo test` 命令运行您的测试。Cargo 在两个位置查找要运行的测试：您的每个 `src` 文件中的测试和 `tests/` 目录中的任何测试。您 `src` 文件中的测试应是单元测试和[文档测试]。`tests/` 目录中的测试应是集成风格的测试。因此，您需要将您的 crate 导入到 `tests/` 中的文件中。
 
-Here's an example of running `cargo test` in our [package][def-package], which
-currently has no tests:
+以下是在我们的[包][def-package]中运行 `cargo test` 的示例，该包目前没有测试：
 
 ```console
 $ cargo test
@@ -20,25 +15,19 @@ running 0 tests
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 ```
 
-If your package had tests, you would see more output with the correct number of
-tests.
+如果您的包有测试，您将看到包含正确测试数量的更多输出。
 
-You can also run a specific test by passing a filter:
+您也可以通过传递过滤器来运行特定测试：
 
 ```console
 $ cargo test foo
 ```
 
-This will run any test with `foo` in its name.
+这将运行任何名称中包含 `foo` 的测试。
 
-`cargo test` runs additional checks as well. It will compile any examples
-you’ve included to ensure they still compile. It also runs documentation
-tests to ensure your code samples from documentation comments compile.
-Please see the [testing guide][testing] in the Rust documentation for a general
-view of writing and organizing tests. See [Cargo Targets: Tests] to learn more
-about different styles of tests in Cargo.
+`cargo test` 还会执行额外的检查。它将编译您包含的任何示例以确保它们仍然可以编译。同时，它会运行文档测试以确保来自文档注释的代码示例能够编译。关于编写和组织测试的概述，请参阅 Rust 文档中的[测试指南][testing]。要了解 Cargo 中不同风格的测试，请参阅 [Cargo 目标：测试]。
 
-[documentation tests]: ../../rustdoc/write-documentation/documentation-tests.html
-[def-package]:  ../appendix/glossary.md#package  '"package" (glossary entry)'
+[文档测试]: ../../rustdoc/write-documentation/documentation-tests.html
+[def-package]: ../appendix/glossary.md#package '"包" (glossary entry)'
 [testing]: ../../book/ch11-00-testing.html
-[Cargo Targets: Tests]: ../reference/cargo-targets.html#tests
+[Cargo 目标：测试]: ../reference/cargo-targets.html#tests
