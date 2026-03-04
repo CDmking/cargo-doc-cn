@@ -1,60 +1,36 @@
-# Configuration
+# config.toml {#configuration}
 
-This document explains how Cargo’s configuration system works, as well as
-available keys or configuration. For configuration of a package through its
-manifest, see the [manifest format](manifest.md).
+本文档解释了 Cargo 的配置系统如何工作，以及可用的键或配置。关于通过清单文件配置包的信息，请参阅[清单格式](manifest.md)。
 
-## Hierarchical structure
+## 层次结构 {#hierarchical-structure}
 
-Cargo allows local configuration for a particular package as well as global
-configuration. It looks for configuration files in the current directory and
-all parent directories. If, for example, Cargo were invoked in
-`/projects/foo/bar/baz`, then the following configuration files would be
-probed for and unified in this order:
+Cargo 允许针对特定包的本地配置以及全局配置。它会在当前目录及其所有父目录中查找配置文件。例如，如果在 `/projects/foo/bar/baz` 中调用 Cargo，则会按以下顺序探测并合并以下配置文件：
 
 * `/projects/foo/bar/baz/.cargo/config.toml`
 * `/projects/foo/bar/.cargo/config.toml`
 * `/projects/foo/.cargo/config.toml`
 * `/projects/.cargo/config.toml`
 * `/.cargo/config.toml`
-* `$CARGO_HOME/config.toml` which defaults to:
-    * Windows: `%USERPROFILE%\.cargo\config.toml`
-    * Unix: `$HOME/.cargo/config.toml`
+* `$CARGO_HOME/config.toml`，默认为：
+    * Windows：`%USERPROFILE%\.cargo\config.toml`
+    * Unix：`$HOME/.cargo/config.toml`
 
-With this structure, you can specify configuration per-package, and even
-possibly check it into version control. You can also specify personal defaults
-with a configuration file in your home directory.
+通过这种结构，你可以为每个包指定配置，甚至可能将其检入版本控制。你也可以在 home 目录中使用配置文件来指定个人默认设置。
 
-If a key is specified in multiple config files, the values will get merged
-together. Numbers, strings, and booleans will use the value in the deeper
-config directory taking precedence over ancestor directories, where the
-home directory is the lowest priority. Arrays will be joined together
-with higher precedence items being placed later in the merged array.
+如果一个键在多个配置文件中被指定，这些值将被合并。数字、字符串和布尔值将使用更深层配置目录中的值，优先于祖先目录，其中 home 目录的优先级最低。数组将被连接在一起，优先级较高的项被放置在合并数组的后面。
 
-At present, when being invoked from a workspace, Cargo does not read config
-files from crates within the workspace. i.e. if a workspace has two crates in
-it, named `/projects/foo/bar/baz/mylib` and `/projects/foo/bar/baz/mybin`, and
-there are Cargo configs at `/projects/foo/bar/baz/mylib/.cargo/config.toml`
-and `/projects/foo/bar/baz/mybin/.cargo/config.toml`, Cargo does not read
-those configuration files if it is invoked from the workspace root
-(`/projects/foo/bar/baz/`).
+目前，当从工作空间调用时，Cargo 不会读取工作空间内 crate 的配置文件。例如，如果一个工作空间中有两个 crate，分别名为 `/projects/foo/bar/baz/mylib` 和 `/projects/foo/bar/baz/mybin`，并且在 `/projects/foo/bar/baz/mylib/.cargo/config.toml` 和 `/projects/foo/bar/baz/mybin/.cargo/config.toml` 处有 Cargo 配置，如果从工作空间根目录（`/projects/foo/bar/baz/`）调用 Cargo，则不会读取这些配置文件。
 
-> **Note:** Cargo also reads config files without the `.toml` extension, such as
-> `.cargo/config`. Support for the `.toml` extension was added in version 1.39
-> and is the preferred form. If both files exist, Cargo will use the file
-> without the extension.
+> **注意：** Cargo 也会读取不带 `.toml` 扩展名的配置文件，例如 `.cargo/config`。对 `.toml` 扩展名的支持是在 1.39 版本中添加的，并且是首选形式。如果两个文件都存在，Cargo 将使用不带扩展名的文件。
 
-## Configuration format
+## 配置格式 {#configuration-format}
 
-Configuration files are written in the [TOML format][toml] (like the
-manifest), with simple key-value pairs inside of sections (tables). The
-following is a quick overview of all settings, with detailed descriptions
-found below.
+配置文件使用 [TOML 格式][toml]编写（类似于清单文件），其中包含部分（表）内的简单键值对。以下是所有设置的快速概述，详细描述见下文。
 
 ```toml
-paths = ["/path/to/override"] # path dependency overrides
+paths = ["/path/to/override"] # 路径依赖覆盖
 
-[alias]     # command aliases
+[alias]     # 命令别名
 b = "build"
 c = "check"
 t = "test"
@@ -64,129 +40,129 @@ recursive_example = "rr --example recursions"
 space_example = ["run", "--release", "--", "\"command list\""]
 
 [build]
-jobs = 1                      # number of parallel jobs, defaults to # of CPUs
-rustc = "rustc"               # the rust compiler tool
-rustc-wrapper = "…"           # run this wrapper instead of `rustc`
-rustc-workspace-wrapper = "…" # run this wrapper instead of `rustc` for workspace members
-rustdoc = "rustdoc"           # the doc generator tool
-target = "triple"             # build for the target triple (ignored by `cargo install`)
-target-dir = "target"         # path of where to place generated artifacts
-build-dir = "target"          # path of where to place intermediate build artifacts
-rustflags = ["…", "…"]        # custom flags to pass to all compiler invocations
-rustdocflags = ["…", "…"]     # custom flags to pass to rustdoc
-incremental = true            # whether or not to enable incremental compilation
-dep-info-basedir = "…"        # path for the base directory for targets in depfiles
+jobs = 1                      # 并行作业数，默认为 CPU 数量
+rustc = "rustc"               # rust 编译器工具
+rustc-wrapper = "…"           # 运行此包装器而不是 `rustc`
+rustc-workspace-wrapper = "…" # 对工作空间成员运行此包装器而不是 `rustc`
+rustdoc = "rustdoc"           # 文档生成工具
+target = "triple"             # 为目标三元组构建（`cargo install` 忽略）
+target-dir = "target"         # 放置生成产物的路径
+build-dir = "target"          # 放置中间构建产物的路径
+rustflags = ["…", "…"]        # 传递给所有编译器调用的自定义标志
+rustdocflags = ["…", "…"]     # 传递给 rustdoc 的自定义标志
+incremental = true            # 是否启用增量编译
+dep-info-basedir = "…"        # depfiles 中目标的基础目录路径
 
 [credential-alias]
-# Provides a way to define aliases for credential providers.
+# 提供一种定义凭证提供者别名的方式。
 my-alias = ["/usr/bin/cargo-credential-example", "--argument", "value", "--flag"]
 
 [doc]
-browser = "chromium"          # browser to use with `cargo doc --open`,
-                              # overrides the `BROWSER` environment variable
+browser = "chromium"          # 与 `cargo doc --open` 一起使用的浏览器，
+                              # 覆盖 `BROWSER` 环境变量
 
 [env]
-# Set ENV_VAR_NAME=value for any process run by Cargo
+# 为 Cargo 运行的任何进程设置 ENV_VAR_NAME=value
 ENV_VAR_NAME = "value"
-# Set even if already present in environment
+# 即使环境中已存在也设置
 ENV_VAR_NAME_2 = { value = "value", force = true }
-# `value` is relative to the parent of `.cargo/config.toml`, env var will be the full absolute path
+# `value` 相对于 `.cargo/config.toml` 的父目录，环境变量将是完整的绝对路径
 ENV_VAR_NAME_3 = { value = "relative/path", relative = true }
 
 [future-incompat-report]
-frequency = 'always' # when to display a notification about a future incompat report
+frequency = 'always' # 何时显示关于未来不兼容报告的通知
 
 [cache]
-auto-clean-frequency = "1 day"   # How often to perform automatic cache cleaning
+auto-clean-frequency = "1 day"   # 执行自动缓存清理的频率
 
 [cargo-new]
-vcs = "none"              # VCS to use ('git', 'hg', 'pijul', 'fossil', 'none')
+vcs = "none"              # 使用的 VCS（'git'、'hg'、'pijul'、'fossil'、'none'）
 
 [http]
-debug = false               # HTTP debugging
-proxy = "host:port"         # HTTP proxy in libcurl format
-ssl-version = "tlsv1.3"     # TLS version to use
-ssl-version.max = "tlsv1.3" # maximum TLS version
-ssl-version.min = "tlsv1.1" # minimum TLS version
-timeout = 30                # timeout for each HTTP request, in seconds
-low-speed-limit = 10        # network timeout threshold (bytes/sec)
-cainfo = "cert.pem"         # path to Certificate Authority (CA) bundle
-proxy-cainfo = "cert.pem"   # path to proxy Certificate Authority (CA) bundle
-check-revoke = true         # check for SSL certificate revocation
-multiplexing = true         # HTTP/2 multiplexing
-user-agent = "…"            # the user-agent header
+debug = false               # HTTP 调试
+proxy = "host:port"         # libcurl 格式的 HTTP 代理
+ssl-version = "tlsv1.3"     # 使用的 TLS 版本
+ssl-version.max = "tlsv1.3" # 最大 TLS 版本
+ssl-version.min = "tlsv1.1" # 最小 TLS 版本
+timeout = 30                # 每个 HTTP 请求的超时时间，单位秒
+low-speed-limit = 10        # 网络超时阈值（字节/秒）
+cainfo = "cert.pem"         # 证书颁发机构（CA）捆绑包的路径
+proxy-cainfo = "cert.pem"   # 代理证书颁发机构（CA）捆绑包的路径
+check-revoke = true         # 检查 SSL 证书吊销
+multiplexing = true         # HTTP/2 多路复用
+user-agent = "…"            # 用户代理头
 
 [install]
-root = "/some/path"         # `cargo install` destination directory
+root = "/some/path"         # `cargo install` 目标目录
 
 [net]
-retry = 3                   # network retries
-git-fetch-with-cli = true   # use the `git` executable for git operations
-offline = true              # do not access the network
+retry = 3                   # 网络重试次数
+git-fetch-with-cli = true   # 使用 `git` 可执行文件进行 git 操作
+offline = true              # 不访问网络
 
 [net.ssh]
-known-hosts = ["..."]       # known SSH host keys
+known-hosts = ["..."]       # 已知的 SSH 主机密钥
 
 [patch.<registry>]
-# Same keys as for [patch] in Cargo.toml
+# 与 Cargo.toml 中的 [patch] 相同的键
 
-[profile.<name>]         # Modify profile settings via config.
-inherits = "dev"         # Inherits settings from [profile.dev].
-opt-level = 0            # Optimization level.
-debug = true             # Include debug info.
-split-debuginfo = '...'  # Debug info splitting behavior.
-strip = "none"           # Removes symbols or debuginfo.
-debug-assertions = true  # Enables debug assertions.
-overflow-checks = true   # Enables runtime integer overflow checks.
-lto = false              # Sets link-time optimization.
-panic = 'unwind'         # The panic strategy.
-incremental = true       # Incremental compilation.
-codegen-units = 16       # Number of code generation units.
-rpath = false            # Sets the rpath linking option.
-[profile.<name>.build-override]  # Overrides build-script settings.
-# Same keys for a normal profile.
-[profile.<name>.package.<name>]  # Override profile for a package.
-# Same keys for a normal profile (minus `panic`, `lto`, and `rpath`).
+[profile.<name>]         # 通过配置修改配置文件设置。
+inherits = "dev"         # 从 [profile.dev] 继承设置。
+opt-level = 0            # 优化级别。
+debug = true             # 包含调试信息。
+split-debuginfo = '...'  # 调试信息拆分行为。
+strip = "none"           # 移除符号或调试信息。
+debug-assertions = true  # 启用调试断言。
+overflow-checks = true   # 启用运行时整数溢出检查。
+lto = false              # 设置链接时优化。
+panic = 'unwind'         # panic 策略。
+incremental = true       # 增量编译。
+codegen-units = 16       # 代码生成单元数量。
+rpath = false            # 设置 rpath 链接选项。
+[profile.<name>.build-override]  # 覆盖构建脚本设置。
+# 与普通配置文件相同的键。
+[profile.<name>.package.<name>]  # 覆盖包的配置文件。
+# 与普通配置文件相同的键（减去 `panic`、`lto` 和 `rpath`）。
 
 [resolver]
-incompatible-rust-versions = "allow"  # Specifies how resolver reacts to these
+incompatible-rust-versions = "allow"  # 指定解析器如何响应这些情况
 
-[registries.<name>]  # registries other than crates.io
-index = "…"          # URL of the registry index
-token = "…"          # authentication token for the registry
-credential-provider = "cargo:token" # The credential provider for this registry.
+[registries.<name>]  # crates.io 以外的注册中心
+index = "…"          # 注册中心索引的 URL
+token = "…"          # 注册中心的认证令牌
+credential-provider = "cargo:token" # 此注册中心的凭证提供者。
 
 [registries.crates-io]
-protocol = "sparse"  # The protocol to use to access crates.io.
+protocol = "sparse"  # 用于访问 crates.io 的协议。
 
 [registry]
-default = "…"        # name of the default registry
-token = "…"          # authentication token for crates.io
-credential-provider = "cargo:token"           # The credential provider for crates.io.
-global-credential-providers = ["cargo:token"] # The credential providers to use by default.
+default = "…"        # 默认注册中心的名称
+token = "…"          # crates.io 的认证令牌
+credential-provider = "cargo:token"           # crates.io 的凭证提供者。
+global-credential-providers = ["cargo:token"] # 默认使用的凭证提供者。
 
-[source.<name>]      # source definition and replacement
-replace-with = "…"   # replace this source with the given named source
-directory = "…"      # path to a directory source
-registry = "…"       # URL to a registry source
-local-registry = "…" # path to a local registry source
-git = "…"            # URL of a git repository source
-branch = "…"         # branch name for the git repository
-tag = "…"            # tag name for the git repository
-rev = "…"            # revision for the git repository
+[source.<name>]      # 源定义和替换
+replace-with = "…"   # 用给定的命名源替换此源
+directory = "…"      # 目录源的路径
+registry = "…"       # 注册中心源的 URL
+local-registry = "…" # 本地注册中心源的路径
+git = "…"            # git 仓库源的 URL
+branch = "…"         # git 仓库的分支名
+tag = "…"            # git 仓库的标签名
+rev = "…"            # git 仓库的修订版本
 
 [target.<triple>]
-linker = "…"              # linker to use
-runner = "…"              # wrapper to run executables
-rustflags = ["…", "…"]    # custom flags for `rustc`
-rustdocflags = ["…", "…"] # custom flags for `rustdoc`
+linker = "…"              # 使用的链接器
+runner = "…"              # 运行可执行文件的包装器
+rustflags = ["…", "…"]    # `rustc` 的自定义标志
+rustdocflags = ["…", "…"] # `rustdoc` 的自定义标志
 
 [target.<cfg>]
-linker = "…"            # linker to use
-runner = "…"            # wrapper to run executables
-rustflags = ["…", "…"]  # custom flags for `rustc`
+linker = "…"            # 使用的链接器
+runner = "…"            # 运行可执行文件的包装器
+rustflags = ["…", "…"]  # `rustc` 的自定义标志
 
-[target.<triple>.<links>] # `links` build script override
+[target.<triple>.<links>] # `links` 构建脚本覆盖
 rustc-link-lib = ["foo"]
 rustc-link-search = ["/path/to/foo"]
 rustc-flags = "-L /some/path"
@@ -197,189 +173,130 @@ metadata_key1 = "value"
 metadata_key2 = "value"
 
 [term]
-quiet = false                    # whether cargo output is quiet
-verbose = false                  # whether cargo provides verbose output
-color = 'auto'                   # whether cargo colorizes output
-hyperlinks = true                # whether cargo inserts links into output
-unicode = true                   # whether cargo can render output using non-ASCII unicode characters
-progress.when = 'auto'           # whether cargo shows progress bar
-progress.width = 80              # width of progress bar
-progress.term-integration = true # whether cargo reports progress to terminal emulator
+quiet = false                    # cargo 输出是否静默
+verbose = false                  # cargo 是否提供详细输出
+color = 'auto'                   # cargo 是否对输出着色
+hyperlinks = true                # cargo 是否在输出中插入链接
+unicode = true                   # cargo 是否可以使用非 ASCII unicode 字符渲染输出
+progress.when = 'auto'           # cargo 是否显示进度条
+progress.width = 80              # 进度条宽度
+progress.term-integration = true # cargo 是否向终端模拟器报告进度
 ```
 
-## Environment variables
+## 环境变量 {#environment-variables}
 
-Cargo can also be configured through environment variables in addition to the
-TOML configuration files. For each configuration key of the form `foo.bar` the
-environment variable `CARGO_FOO_BAR` can also be used to define the value.
-Keys are converted to uppercase, dots and dashes are converted to underscores.
-For example the `target.x86_64-unknown-linux-gnu.runner` key can also be
-defined by the `CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER` environment
-variable.
+除了 TOML 配置文件外，Cargo 还可以通过环境变量进行配置。对于每个形式为 `foo.bar` 的配置键，也可以使用环境变量 `CARGO_FOO_BAR` 来定义值。键被转换为大写，点和短横线被转换为下划线。例如，`target.x86_64-unknown-linux-gnu.runner` 键也可以通过 `CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER` 环境变量定义。
 
-Environment variables will take precedence over TOML configuration files.
-Currently only integer, boolean, string and some array values are supported to
-be defined by environment variables. [Descriptions below](#configuration-keys)
-indicate which keys support environment variables and otherwise they are not
-supported due to [technical issues](https://github.com/rust-lang/cargo/issues/5416).
+环境变量将优先于 TOML 配置文件。目前只有整数、布尔值、字符串和一些数组值支持通过环境变量定义。[下面的描述](#configuration-keys)指出了哪些键支持环境变量，否则由于[技术问题](https://github.com/rust-lang/cargo/issues/5416)而不支持。
 
-In addition to the system above, Cargo recognizes a few other specific
-[environment variables][env].
+除了上述系统外，Cargo 还识别一些其他特定的[环境变量][env]。
 
-## Command-line overrides
+## 命令行覆盖 {#command-line-overrides}
 
-Cargo also accepts arbitrary configuration overrides through the
-`--config` command-line option. The argument should be in TOML syntax of
-`KEY=VALUE` or provided as a path to an extra configuration file:
+Cargo 还通过 `--config` 命令行选项接受任意的配置覆盖。参数应为 `KEY=VALUE` 的 TOML 语法，或作为额外配置文件的路径提供：
 
 ```console
-# With `KEY=VALUE` in TOML syntax
+# 使用 TOML 语法的 `KEY=VALUE`
 cargo --config net.git-fetch-with-cli=true fetch
 
-# With a path to a configuration file
+# 使用配置文件的路径
 cargo --config ./path/to/my/extra-config.toml fetch
 ```
 
-The `--config` option may be specified multiple times, in which case the
-values are merged in left-to-right order, using the same merging logic
-that is used when multiple configuration files apply. Configuration
-values specified this way take precedence over environment variables,
-which take precedence over configuration files.
+`--config` 选项可以指定多次，在这种情况下，值按从左到右的顺序合并，使用与多个配置文件应用时相同的合并逻辑。以此方式指定的配置值优先于环境变量，环境变量优先于配置文件。
 
-When the `--config` option is provided as an extra configuration file,
-The configuration file loaded this way follow the same precedence rules
-as other options specified directly with `--config`.
+当 `--config` 选项作为额外配置文件提供时，以此方式加载的配置文件遵循与直接使用 `--config` 指定的其他选项相同的优先级规则。
 
-Some examples of what it looks like using Bourne shell syntax:
+以下是一些使用 Bourne shell 语法的示例：
 
 ```console
-# Most shells will require escaping.
+# 大多数 shell 需要转义。
 cargo --config http.proxy=\"http://example.com\" …
 
-# Spaces may be used.
+# 可以使用空格。
 cargo --config "net.git-fetch-with-cli = true" …
 
-# TOML array example. Single quotes make it easier to read and write.
+# TOML 数组示例。单引号使其更易于读写。
 cargo --config 'build.rustdocflags = ["--html-in-header", "header.html"]' …
 
-# Example of a complex TOML key.
+# 复杂 TOML 键的示例。
 cargo --config "target.'cfg(all(target_arch = \"arm\", target_os = \"none\"))'.runner = 'my-runner'" …
 
-# Example of overriding a profile setting.
+# 覆盖配置文件设置的示例。
 cargo --config profile.dev.package.image.opt-level=3 …
 ```
 
-## Config-relative paths
+## 配置相对路径 {#config-relative-paths}
 
-Paths in config files may be absolute, relative, or a bare name without any path separators.
-Paths for executables without a path separator will use the `PATH` environment variable to search for the executable.
-Paths for non-executables will be relative to where the config value is defined.
+配置文件中的路径可以是绝对路径、相对路径或不带任何路径分隔符的裸名称。不带路径分隔符的可执行文件路径将使用 `PATH` 环境变量搜索可执行文件。非可执行文件的路径将相对于定义配置值的位置。
 
-In particular, rules are:
+具体规则如下：
 
-* For environment variables, paths are relative to the current working directory.
-* For config values loaded directly from the [`--config KEY=VALUE`](#command-line-overrides) option,
-  paths are relative to the current working directory.
-* For config files, paths are relative to the parent directory of the directory where the config files were defined,
-  no matter those files are from either the [hierarchical probing](#hierarchical-structure)
-  or the [`--config <path>`](#command-line-overrides) option.
+* 对于环境变量，路径相对于当前工作目录。
+* 对于直接从 [`--config KEY=VALUE`](#command-line-overrides) 选项加载的配置值，路径相对于当前工作目录。
+* 对于配置文件，路径相对于定义配置文件的目录的父目录，无论这些文件是来自[层次结构探测](#hierarchical-structure)还是 [`--config <path>`](#command-line-overrides) 选项。
 
-> **Note:** To maintain consistency with existing `.cargo/config.toml` probing behavior,
-> it is by design that a path in a config file passed via `--config <path>`
-> is also relative to two levels up from the config file itself.
+> **注意：** 为了与现有的 `.cargo/config.toml` 探测行为保持一致，通过 `--config <path>` 传递的配置文件中的路径也相对于配置文件本身向上两级目录，这是设计使然。
 >
-> To avoid unexpected results, the rule of thumb is putting your extra config files
-> at the same level of discovered `.cargo/config.toml` in your project.
-> For instance, given a project `/my/project`,
-> it is recommended to put config files under `/my/project/.cargo`
-> or a new directory at the same level, such as `/my/project/.config`.
+> 为避免意外结果，经验法则是将额外的配置文件放在项目中发现的 `.cargo/config.toml` 的同一级别。例如，给定一个项目 `/my/project`，建议将配置文件放在 `/my/project/.cargo` 下或同一级别的新目录中，例如 `/my/project/.config`。
 
 ```toml
-# Relative path examples.
+# 相对路径示例。
 
 [target.x86_64-unknown-linux-gnu]
-runner = "foo"  # Searches `PATH` for `foo`.
+runner = "foo"  # 在 `PATH` 中搜索 `foo`。
 
 [source.vendored-sources]
-# Directory is relative to the parent where `.cargo/config.toml` is located.
-# For example, `/my/project/.cargo/config.toml` would result in `/my/project/vendor`.
+# 目录相对于包含 `.cargo/config.toml` 的父目录。
+# 例如，`/my/project/.cargo/config.toml` 将导致 `/my/project/vendor`。
 directory = "vendor"
 ```
 
-## Executable paths with arguments
+## 带参数的可执行文件路径 {#executable-paths-with-arguments}
 
-Some Cargo commands invoke external programs, which can be configured as a path
-and some number of arguments.
+一些 Cargo 命令会调用外部程序，这些程序可以配置为路径和一些参数。
 
-The value may be an array of strings like `['/path/to/program', 'somearg']` or
-a space-separated string like `'/path/to/program somearg'`. If the path to the
-executable contains a space, the list form must be used.
+值可以是字符串数组，如 `['/path/to/program', 'somearg']`，也可以是空格分隔的字符串，如 `'/path/to/program somearg'`。如果可执行文件的路径包含空格，则必须使用列表形式。
 
-If Cargo is passing other arguments to the program such as a path to open or
-run, they will be passed after the last specified argument in the value of an
-option of this format. If the specified program does not have path separators,
-Cargo will search `PATH` for its executable.
+如果 Cargo 向程序传递其他参数，例如要打开或运行的路径，它们将在值的最后一个指定参数之后传递。如果指定的程序没有路径分隔符，Cargo 将在 `PATH` 中搜索其可执行文件。
 
-## Credentials
+## 凭证 {#credentials}
 
-Configuration values with sensitive information are stored in the
-`$CARGO_HOME/credentials.toml` file. This file is automatically created and updated
-by [`cargo login`] and [`cargo logout`] when using the [`cargo:token`] credential provider.
+包含敏感信息的配置值存储在 `$CARGO_HOME/credentials.toml` 文件中。当使用 [`cargo:token`] 凭证提供者时，此文件由 [`cargo login`] 和 [`cargo logout`] 自动创建和更新。
 
-Tokens are used by some Cargo commands such as [`cargo publish`] for
-authenticating with remote registries. Care should be taken to protect the
-tokens and to keep them secret.
+令牌被一些 Cargo 命令使用，例如 [`cargo publish`]，用于与远程注册中心进行身份验证。应注意保护令牌并保持其机密性。
 
-It follows the same format as Cargo config files.
+它遵循与 Cargo 配置文件相同的格式。
 
 ```toml
 [registry]
-token = "…"   # Access token for crates.io
+token = "…"   # crates.io 的访问令牌
 
 [registries.<name>]
-token = "…"   # Access token for the named registry
+token = "…"   # 命名注册中心的访问令牌
 ```
 
-As with most other config values, tokens may be specified with environment
-variables. The token for [crates.io] may be specified with the
-`CARGO_REGISTRY_TOKEN` environment variable. Tokens for other registries may
-be specified with environment variables of the form
-`CARGO_REGISTRIES_<name>_TOKEN` where `<name>` is the name of the registry in
-all capital letters.
+与大多数其他配置值一样，令牌可以通过环境变量指定。[crates.io] 的令牌可以通过 `CARGO_REGISTRY_TOKEN` 环境变量指定。其他注册中心的令牌可以通过形式为 `CARGO_REGISTRIES_<name>_TOKEN` 的环境变量指定，其中 `<name>` 是注册中心名称的大写形式。
 
-> **Note:** Cargo also reads and writes credential files without the `.toml`
-> extension, such as `.cargo/credentials`. Support for the `.toml` extension
-> was added in version 1.39. In version 1.68, Cargo writes to the file with the
-> extension by default. However, for backward compatibility reason, when both
-> files exist, Cargo will read and write the file without the extension.
+> **注意：** Cargo 也会读取和写入不带 `.toml` 扩展名的凭证文件，例如 `.cargo/credentials`。对 `.toml` 扩展名的支持是在 1.39 版本中添加的。在 1.68 版本中，Cargo 默认写入带扩展名的文件。然而，出于向后兼容的原因，当两个文件都存在时，Cargo 将读取和写入不带扩展名的文件。
 
-## Configuration keys
+## 配置键 {#configuration-keys}
 
-This section documents all configuration keys. The description for keys with
-variable parts are annotated with angled brackets like `target.<triple>` where
-the `<triple>` part can be any [target triple] like
-`target.x86_64-pc-windows-msvc`.
+本节记录所有配置键。具有可变部分的键的描述用尖括号注释，如 `target.<triple>`，其中 `<triple>` 部分可以是任何[目标三元组][target triple]，如 `target.x86_64-pc-windows-msvc`。
 
 ### `paths`
-* Type: array of strings (paths)
-* Default: none
-* Environment: not supported
+* 类型：字符串数组（路径）
+* 默认值：无
+* 环境：不支持
 
-An array of paths to local packages which are to be used as overrides for
-dependencies. For more information see the [Overriding Dependencies
-guide](overriding-dependencies.md#paths-overrides).
+本地包的路径数组，用作依赖项的覆盖。更多信息请参阅[覆盖依赖项指南](overriding-dependencies.md#paths-overrides)。
 
 ### `[alias]`
-* Type: string or array of strings
-* Default: see below
-* Environment: `CARGO_ALIAS_<name>`
+* 类型：字符串或字符串数组
+* 默认值：见下文
+* 环境：`CARGO_ALIAS_<name>`
 
-The `[alias]` table defines CLI command aliases. For example, running `cargo
-b` is an alias for running `cargo build`. Each key in the table is the
-subcommand, and the value is the actual command to run. The value may be an
-array of strings, where the first element is the command and the following are
-arguments. It may also be a string, which will be split on spaces into
-subcommand and arguments. The following aliases are built-in to Cargo:
+`[alias]` 表定义了 CLI 命令别名。例如，运行 `cargo b` 是运行 `cargo build` 的别名。表中的每个键是子命令，值是要运行的实际命令。值可以是字符串数组，其中第一个元素是命令，后面的是参数。也可以是字符串，将按空格拆分为子命令和参数。以下别名是 Cargo 内置的：
 
 ```toml
 [alias]
@@ -391,9 +308,9 @@ r = "run"
 rm = "remove"
 ```
 
-Aliases are not allowed to redefine existing built-in commands.
+不允许别名重定义现有的内置命令。
 
-Aliases are recursive:
+别名是递归的：
 
 ```toml
 [alias]
@@ -403,70 +320,60 @@ recursive_example = "rr --example recursions"
 
 ### `[build]`
 
-The `[build]` table controls build-time operations and compiler settings.
+`[build]` 表控制构建时操作和编译器设置。
 
 #### `build.jobs`
-* Type: integer or string
-* Default: number of logical CPUs
-* Environment: `CARGO_BUILD_JOBS`
+* 类型：整数或字符串
+* 默认值：逻辑 CPU 数量
+* 环境：`CARGO_BUILD_JOBS`
 
-Sets the maximum number of compiler processes to run in parallel. If negative,
-it sets the maximum number of compiler processes to the number of logical CPUs
-plus provided value. Should not be 0. If a string `default` is provided, it sets
-the value back to defaults.
+设置并行运行的编译器进程的最大数量。如果为负数，则将编译器进程的最大数量设置为逻辑 CPU 数量加上提供的值。不应为 0。如果提供字符串 `default`，则将值重置为默认值。
 
-Can be overridden with the `--jobs` CLI option.
+可以通过 `--jobs` CLI 选项覆盖。
 
 #### `build.rustc`
-* Type: string (program path)
-* Default: `"rustc"`
-* Environment: `CARGO_BUILD_RUSTC` or `RUSTC`
+* 类型：字符串（程序路径）
+* 默认值：`"rustc"`
+* 环境：`CARGO_BUILD_RUSTC` 或 `RUSTC`
 
-Sets the executable to use for `rustc`.
+设置用于 `rustc` 的可执行文件。
 
 #### `build.rustc-wrapper`
-* Type: string (program path)
-* Default: none
-* Environment: `CARGO_BUILD_RUSTC_WRAPPER` or `RUSTC_WRAPPER`
+* 类型：字符串（程序路径）
+* 默认值：无
+* 环境：`CARGO_BUILD_RUSTC_WRAPPER` 或 `RUSTC_WRAPPER`
 
-Sets a wrapper to execute instead of `rustc`. The first argument passed to the
-wrapper is the path to the actual executable to use
-(i.e., `build.rustc`, if that is set, or `"rustc"` otherwise).
+设置一个包装器来执行，而不是 `rustc`。传递给包装器的第一个参数是要使用的实际可执行文件的路径（即，如果设置了 `build.rustc`，则为该路径，否则为 `"rustc"`）。
 
 #### `build.rustc-workspace-wrapper`
-* Type: string (program path)
-* Default: none
-* Environment: `CARGO_BUILD_RUSTC_WORKSPACE_WRAPPER` or `RUSTC_WORKSPACE_WRAPPER`
+* 类型：字符串（程序路径）
+* 默认值：无
+* 环境：`CARGO_BUILD_RUSTC_WORKSPACE_WRAPPER` 或 `RUSTC_WORKSPACE_WRAPPER`
 
-Sets a wrapper to execute instead of `rustc`, for workspace members only. When building a
-single-package project without workspaces, that package is considered to be the workspace. The first
-argument passed to the wrapper is the path to the actual executable to use (i.e., `build.rustc`, if
-that is set, or `"rustc"` otherwise). It affects the filename hash so that artifacts produced by the
-wrapper are cached separately.
+设置一个包装器来执行，而不是 `rustc`，仅适用于工作空间成员。当构建没有工作空间的单包项目时，该包被视为工作空间。传递给包装器的第一个参数是要使用的实际可执行文件的路径（即，如果设置了 `build.rustc`，则为该路径，否则为 `"rustc"`）。它影响文件名哈希，以便包装器生成的产物被单独缓存。
 
-If both `rustc-wrapper` and `rustc-workspace-wrapper` are set, then they will be nested:
-the final invocation is `$RUSTC_WRAPPER $RUSTC_WORKSPACE_WRAPPER $RUSTC`.
+如果同时设置了 `rustc-wrapper` 和 `rustc-workspace-wrapper`，则它们将被嵌套：最终调用是 `$RUSTC_WRAPPER $RUSTC_WORKSPACE_WRAPPER $RUSTC`。
 
 #### `build.rustdoc`
-* Type: string (program path)
-* Default: `"rustdoc"`
-* Environment: `CARGO_BUILD_RUSTDOC` or `RUSTDOC`
+* 类型：字符串（程序路径）
+* 默认值：`"rustdoc"`
+* 环境：`CARGO_BUILD_RUSTDOC` 或 `RUSTDOC`
 
-Sets the executable to use for `rustdoc`.
+设置用于 `rustdoc` 的可执行文件。
 
 #### `build.target`
-* Type: string or array of strings
-* Default: host platform
-* Environment: `CARGO_BUILD_TARGET`
+* 类型：字符串或字符串数组
+* 默认值：主机平台
+* 环境：`CARGO_BUILD_TARGET`
 
-The default [target platform triples][target triple] to compile to.
+默认编译的[目标平台三元组][target triple]。
 
-Possible values:
-- Any supported target in `rustc --print target-list`.
-- `"host-tuple"`, which will internally be substituted by the host's target. This can be particularly useful if you're cross-compiling some crates, and don't want to specify your host's machine as a target (for instance, an `xtask` in a shared project that may be worked on by many hosts).
-- A path to a custom target specification. See [Custom Target Lookup Path](../../rustc/targets/custom.html#custom-target-lookup-path) for more information.
+可能的值：
+- `rustc --print target-list` 中任何支持的目标。
+- `"host-tuple"`，将在内部替换为主机的目标。这在交叉编译某些 crate 且不想将主机机器指定为目标时特别有用（例如，共享项目中可能由许多主机处理的 `xtask`）。
+- 自定义目标规范文件的路径。更多信息请参阅[自定义目标查找路径](../../rustc/targets/custom.html#custom-target-lookup-path)。
 
-Can be overridden with the `--target` CLI option.
+可以通过 `--target` CLI 选项覆盖。
 
 ```toml
 [build]
@@ -474,200 +381,154 @@ target = ["x86_64-unknown-linux-gnu", "i686-unknown-linux-gnu"]
 ```
 
 #### `build.target-dir`
-* Type: string (path)
-* Default: `"target"`
-* Environment: `CARGO_BUILD_TARGET_DIR` or `CARGO_TARGET_DIR`
+* 类型：字符串（路径）
+* 默认值：`"target"`
+* 环境：`CARGO_BUILD_TARGET_DIR` 或 `CARGO_TARGET_DIR`
 
-The path to where all compiler output is placed. The default if not specified
-is a directory named `target` located at the root of the workspace.
+所有编译器输出放置的路径。如果未指定，默认是工作空间根目录下名为 `target` 的目录。
 
-Can be overridden with the `--target-dir` CLI option.
+可以通过 `--target-dir` 命令行选项覆盖。
 
-For more information see the [build cache documentation](../reference/build-cache.md).
+更多信息请参阅[构建缓存文档](../reference/build-cache.md)。
 
 #### `build.build-dir`
 
-* Type: string (path)
-* Default: Defaults to the value of `build.target-dir`
-* Environment: `CARGO_BUILD_BUILD_DIR`
+* 类型：字符串（路径）
+* 默认值：默认为 `build.target-dir` 的值
+* 环境：`CARGO_BUILD_BUILD_DIR`
 
-The directory where intermediate build artifacts will be stored.
-Intermediate artifacts are produced by Rustc/Cargo during the build process.
+存储中间构建产物的目录。中间产物是 Rustc/Cargo 在构建过程中产生的。
 
-This option supports path templating.
+此选项支持路径模板。
 
-Available template variables:
-* `{workspace-root}` resolves to root of the current workspace.
-* `{cargo-cache-home}` resolves to `CARGO_HOME`
-* `{workspace-path-hash}` resolves to a hash of the manifest path
+可用的模板变量：
+* `{workspace-root}` 解析为当前工作空间的根目录。
+* `{cargo-cache-home}` 解析为 `CARGO_HOME`
+* `{workspace-path-hash}` 解析为清单路径的哈希值
 
-For more information see the [build cache documentation](../reference/build-cache.md).
+更多信息请参阅[构建缓存文档](../reference/build-cache.md)。
 
 #### `build.rustflags`
-* Type: string or array of strings
-* Default: none
-* Environment: `CARGO_BUILD_RUSTFLAGS` or `CARGO_ENCODED_RUSTFLAGS` or `RUSTFLAGS`
+* 类型：字符串或字符串数组
+* 默认值：无
+* 环境：`CARGO_BUILD_RUSTFLAGS` 或 `CARGO_ENCODED_RUSTFLAGS` 或 `RUSTFLAGS`
 
-Extra command-line flags to pass to `rustc`. The value may be an array of
-strings or a space-separated string.
+传递给 `rustc` 的额外命令行标志。值可以是字符串数组或空格分隔的字符串。
 
-There are four mutually exclusive sources of extra flags. They are checked in
-order, with the first one being used:
+有四个互斥的额外标志来源。它们按顺序检查，使用第一个：
 
-1. `CARGO_ENCODED_RUSTFLAGS` environment variable.
-2. `RUSTFLAGS` environment variable.
-3. All matching `target.<triple>.rustflags` and `target.<cfg>.rustflags`
-   config entries joined together.
-4. `build.rustflags` config value.
+1. `CARGO_ENCODED_RUSTFLAGS` 环境变量。
+2. `RUSTFLAGS` 环境变量。
+3. 所有匹配的 `target.<triple>.rustflags` 和 `target.<cfg>.rustflags` 配置条目连接在一起。
+4. `build.rustflags` 配置值。
 
-Additional flags may also be passed with the [`cargo rustc`] command.
+额外的标志也可以通过 [`cargo rustc`] 命令传递。
 
-If the `--target` flag (or [`build.target`](#buildtarget)) is used, then the
-flags will only be passed to the compiler for the target. Things being built
-for the host, such as build scripts or proc macros, will not receive the args.
-Without `--target`, the flags will be passed to all compiler invocations
-(including build scripts and proc macros) because dependencies are shared. If
-you have args that you do not want to pass to build scripts or proc macros and
-are building for the host, pass `--target` with the [host triple][target triple].
+如果使用了 `--target` 标志（或 [`build.target`](#buildtarget)），则标志仅传递给目标编译器。为主机构建的内容，如构建脚本或过程宏，将不会接收这些参数。如果没有 `--target`，标志将传递给所有编译器调用（包括构建脚本和过程宏），因为依赖项是共享的。如果你有不想传递给构建脚本或过程宏的参数，并且正在为主机构建，请使用[主机三元组][target triple]传递 `--target`。
 
-It is not recommended to pass in flags that Cargo itself usually manages. For
-example, the flags driven by [profiles](profiles.md) are best handled by setting the
-appropriate profile setting.
+不建议传递通常由 Cargo 本身管理的标志。例如，由[配置文件](profiles.md)驱动的标志最好通过设置适当的配置文件设置来处理。
 
-> **Caution**: Due to the low-level nature of passing flags directly to the
-> compiler, this may cause a conflict with future versions of Cargo which may
-> issue the same or similar flags on its own which may interfere with the
-> flags you specify. This is an area where Cargo may not always be backwards
-> compatible.
+> **注意**：由于直接将标志传递给编译器的低级性质，这可能会导致与未来版本的 Cargo 冲突，这些版本可能会自行发出相同或类似的标志，从而干扰你指定的标志。这是 Cargo 可能不总是向后兼容的领域。
 
 #### `build.rustdocflags`
-* Type: string or array of strings
-* Default: none
-* Environment: `CARGO_BUILD_RUSTDOCFLAGS` or `CARGO_ENCODED_RUSTDOCFLAGS` or `RUSTDOCFLAGS`
+* 类型：字符串或字符串数组
+* 默认值：无
+* 环境：`CARGO_BUILD_RUSTDOCFLAGS` 或 `CARGO_ENCODED_RUSTDOCFLAGS` 或 `RUSTDOCFLAGS`
 
-Extra command-line flags to pass to `rustdoc`. The value may be an array of
-strings or a space-separated string.
+传递给 `rustdoc` 的额外命令行标志。值可以是字符串数组或空格分隔的字符串。
 
-There are four mutually exclusive sources of extra flags. They are checked in
-order, with the first one being used:
+有四个互斥的额外标志来源。它们按顺序检查，使用第一个：
 
-1. `CARGO_ENCODED_RUSTDOCFLAGS` environment variable.
-2. `RUSTDOCFLAGS` environment variable.
-3. All matching `target.<triple>.rustdocflags` config entries joined together.
-4. `build.rustdocflags` config value.
+1. `CARGO_ENCODED_RUSTDOCFLAGS` 环境变量。
+2. `RUSTDOCFLAGS` 环境变量。
+3. 所有匹配的 `target.<triple>.rustdocflags` 配置条目连接在一起。
+4. `build.rustdocflags` 配置值。
 
-Additional flags may also be passed with the [`cargo rustdoc`] command.
+额外的标志也可以通过 [`cargo rustdoc`] 命令传递。
 
-> **Caution**: Due to the low-level nature of passing flags directly to the
-> compiler, this may cause a conflict with future versions of Cargo which may
-> issue the same or similar flags on its own which may interfere with the
-> flags you specify. This is an area where Cargo may not always be backwards
-> compatible.
+> **注意**：由于直接将标志传递给编译器的低级性质，这可能会导致与未来版本的 Cargo 冲突，这些版本可能会自行发出相同或类似的标志，从而干扰你指定的标志。这是 Cargo 可能不总是向后兼容的领域。
 
 #### `build.incremental`
-* Type: bool
-* Default: from profile
-* Environment: `CARGO_BUILD_INCREMENTAL` or `CARGO_INCREMENTAL`
+* 类型：布尔值
+* 默认值：来自配置文件
+* 环境：`CARGO_BUILD_INCREMENTAL` 或 `CARGO_INCREMENTAL`
 
-Whether or not to perform [incremental compilation]. The default if not set is
-to use the value from the [profile](profiles.md#incremental). Otherwise this overrides the setting of
-all profiles.
+是否执行[增量编译]。如果未设置，默认使用[配置文件](profiles.md#incremental)中的值。否则，这将覆盖所有配置文件的设置。
 
-The `CARGO_INCREMENTAL` environment variable can be set to `1` to force enable
-incremental compilation for all profiles, or `0` to disable it. This env var
-overrides the config setting.
+`CARGO_INCREMENTAL` 环境变量可以设置为 `1` 以强制为所有配置文件启用增量编译，或设置为 `0` 以禁用它。此环境变量覆盖配置设置。
 
 #### `build.dep-info-basedir`
-* Type: string (path)
-* Default: none
-* Environment: `CARGO_BUILD_DEP_INFO_BASEDIR`
+* 类型：字符串（路径）
+* 默认值：无
+* 环境：`CARGO_BUILD_DEP_INFO_BASEDIR`
 
-Strips the given path prefix from [dep
-info](../reference/build-cache.md#dep-info-files) file paths. This config setting
-is intended to convert absolute paths to relative paths for tools that require
-relative paths.
+从[依赖信息文件](../reference/build-cache.md#dep-info-files)路径中剥离给定的路径前缀。此配置设置旨在将绝对路径转换为相对路径，以满足需要相对路径的工具。
 
-The setting itself is a config-relative path. So, for example, a value of
-`"."` would strip all paths starting with the parent directory of the `.cargo`
-directory.
+设置本身是一个配置相对路径。例如，值 `"."` 将剥离所有以 `.cargo` 目录的父目录开头的路径。
 
 #### `build.pipelining`
 
-This option is deprecated and unused. Cargo always has pipelining enabled.
+此选项已弃用且未使用。Cargo 始终启用流水线。
 
 ### `[credential-alias]`
-* Type: string or array of strings
-* Default: empty
-* Environment: `CARGO_CREDENTIAL_ALIAS_<name>`
+* 类型：字符串或字符串数组
+* 默认值：空
+* 环境：`CARGO_CREDENTIAL_ALIAS_<name>`
 
-The `[credential-alias]` table defines credential provider aliases.
-These aliases can be referenced as an element of the `registry.global-credential-providers`
-array, or as a credential provider for a specific registry
-under `registries.<NAME>.credential-provider`.
+`[credential-alias]` 表定义了凭证提供者别名。这些别名可以作为 `registry.global-credential-providers` 数组的元素引用，或作为特定注册中心的凭证提供者，在 `registries.<NAME>.credential-provider` 下引用。
 
-If specified as a string, the value will be split on spaces into path and arguments.
+如果指定为字符串，值将按空格拆分为路径和参数。
 
-For example, to define an alias called `my-alias`:
+例如，要定义一个名为 `my-alias` 的别名：
 
 ```toml
 [credential-alias]
 my-alias = ["/usr/bin/cargo-credential-example", "--argument", "value", "--flag"]
 ```
-See [Registry Authentication](registry-authentication.md) for more information.
+更多信息请参阅[注册中心认证](registry-authentication.md)。
 
 ### `[doc]`
 
-The `[doc]` table defines options for the [`cargo doc`] command.
+`[doc]` 表定义了 [`cargo doc`] 命令的选项。
 
 #### `doc.browser`
 
-* Type: string or array of strings ([program path with args])
-* Default: `BROWSER` environment variable, or, if that is missing,
-  opening the link in a system specific way
+* 类型：字符串或字符串数组（[带参数的程序路径]）
+* 默认值：`BROWSER` 环境变量，如果缺失，则以系统特定方式打开链接
 
-This option sets the browser to be used by [`cargo doc`], overriding the
-`BROWSER` environment variable when opening documentation with the `--open`
-option.
+此选项设置 [`cargo doc`] 使用的浏览器，在使用 `--open` 选项打开文档时覆盖 `BROWSER` 环境变量。
 
 ### `[cargo-new]`
 
-The `[cargo-new]` table defines defaults for the [`cargo new`] command.
+`[cargo-new]` 表定义了 [`cargo new`] 命令的默认值。
 
 #### `cargo-new.name`
 
-This option is deprecated and unused.
+此选项已弃用且未使用。
 
 #### `cargo-new.email`
 
-This option is deprecated and unused.
+此选项已弃用且未使用。
 
 #### `cargo-new.vcs`
-* Type: string
-* Default: `"git"` or `"none"`
-* Environment: `CARGO_CARGO_NEW_VCS`
+* 类型：字符串
+* 默认值：`"git"` 或 `"none"`
+* 环境：`CARGO_CARGO_NEW_VCS`
 
-Specifies the source control system to use for initializing a new repository.
-Valid values are `git`, `hg` (for Mercurial), `pijul`, `fossil` or `none` to
-disable this behavior. Defaults to `git`, or `none` if already inside a VCS
-repository. Can be overridden with the `--vcs` CLI option.
+指定用于初始化新仓库的源代码管理系统。有效值为 `git`、`hg`（用于 Mercurial）、`pijul`、`fossil` 或 `none` 以禁用此行为。默认为 `git`，如果已在 VCS 仓库中，则默认为 `none`。可以通过 `--vcs` CLI 选项覆盖。
 
 ### `[env]`
 
-The `[env]` section allows you to set additional environment variables for
-build scripts, rustc invocations, `cargo run` and `cargo build`.
+`[env]` 部分允许你为构建脚本、rustc 调用、`cargo run` 和 `cargo build` 设置额外的环境变量。
 
 ```toml
 [env]
 OPENSSL_DIR = "/opt/openssl"
 ```
 
-By default, the variables specified will not override values that already exist
-in the environment. This behavior can be changed by setting the `force` flag.
+默认情况下，指定的变量不会覆盖环境中已存在的值。可以通过设置 `force` 标志来改变此行为。
 
-Setting the `relative` flag evaluates the value as a config-relative path that
-is relative to the parent directory of the `.cargo` directory that contains the
-`config.toml` file. The value of the environment variable will be the full
-absolute path.
+设置 `relative` 标志会将值评估为配置相对路径，该路径相对于包含 `config.toml` 文件的 `.cargo` 目录的父目录。环境变量的值将是完整的绝对路径。
 
 ```toml
 [env]
@@ -677,228 +538,183 @@ OPENSSL_DIR = { value = "vendor/openssl", relative = true }
 
 ### `[future-incompat-report]`
 
-The `[future-incompat-report]` table controls setting for [future incompat reporting](future-incompat-report.md)
+`[future-incompat-report]` 表控制[未来不兼容报告](future-incompat-report.md)的设置。
 
 #### `future-incompat-report.frequency`
-* Type: string
-* Default: `"always"`
-* Environment: `CARGO_FUTURE_INCOMPAT_REPORT_FREQUENCY`
+* 类型：字符串
+* 默认值：`"always"`
+* 环境：`CARGO_FUTURE_INCOMPAT_REPORT_FREQUENCY`
 
-Controls how often we display a notification to the terminal when a future incompat report is available. Possible values:
+控制当未来不兼容报告可用时，我们向终端显示通知的频率。可能的值：
 
-* `always` (default): Always display a notification when a command (e.g. `cargo build`) produces a future incompat report
-* `never`: Never display a notification
+* `always`（默认）：当命令（例如 `cargo build`）产生未来不兼容报告时，始终显示通知。
+* `never`：从不显示通知。
 
 ### `[cache]`
 
-The `[cache]` table defines settings for cargo's caches.
+`[cache]` 表定义了 Cargo 缓存的设置。
 
-#### Global caches
+#### 全局缓存 {#global-caches}
 
-When running `cargo` commands, Cargo will automatically track which files you are using within the global cache.
-Periodically, Cargo will delete files that have not been used for some period of time.
-It will delete files that have to be downloaded from the network if they have not been used in 3 months. Files that can be generated without network access will be deleted if they have not been used in 1 month.
+运行 `cargo` 命令时，Cargo 会自动跟踪你在全局缓存中使用的文件。Cargo 会定期删除一段时间未使用的文件。如果从网络下载的文件在 3 个月内未使用，Cargo 将删除它们。无需网络访问即可生成的文件如果在 1 个月内未使用，将被删除。
 
-The automatic deletion of files only occurs when running commands that are already doing a significant amount of work, such as all of the build commands (`cargo build`, `cargo test`, `cargo check`, etc.), and `cargo fetch`.
+自动删除文件仅发生在已经执行大量工作的命令时，例如所有构建命令（`cargo build`、`cargo test`、`cargo check` 等）和 `cargo fetch`。
 
-Automatic deletion is disabled if cargo is offline such as with `--offline` or `--frozen` to avoid deleting artifacts that may need to be used if you are offline for a long period of time.
+如果 Cargo 处于离线状态，例如使用 `--offline` 或 `--frozen`，则禁用自动删除，以避免删除如果你长时间离线可能需要使用的产物。
 
-> **Note**: This tracking is currently only implemented for the global cache in Cargo's home directory.
-> This includes registry indexes and source files downloaded from registries and git dependencies.
-> Support for tracking build artifacts is not yet implemented, and tracked in [cargo#13136](https://github.com/rust-lang/cargo/issues/13136).
+> **注意**：目前仅对 Cargo home 目录中的全局缓存实现了此跟踪。这包括从注册中心和 git 依赖项下载的注册中心索引和源文件。对构建产物的跟踪尚未实现，并在 [cargo#13136](https://github.com/rust-lang/cargo/issues/13136) 中跟踪。
 >
-> Additionally, there is an unstable feature to support *manually* triggering cache cleaning, and to further customize the configuration options.
-> See the [Unstable chapter](unstable.md#gc) for more information.
+> 此外，有一个不稳定功能支持*手动*触发缓存清理，并进一步自定义配置选项。更多信息请参阅[不稳定章节](unstable.md#gc)。
 
 #### `cache.auto-clean-frequency`
-* Type: string
-* Default: `"1 day"`
-* Environment: `CARGO_CACHE_AUTO_CLEAN_FREQUENCY`
+* 类型：字符串
+* 默认值：`"1 day"`
+* 环境：`CARGO_CACHE_AUTO_CLEAN_FREQUENCY`
 
-This option defines how often Cargo will automatically delete unused files in the global cache.
-This does *not* define how old the files must be, those thresholds are described [above](#global-caches).
+此选项定义 Cargo 自动删除全局缓存中未使用文件的频率。这*不*定义文件必须有多旧，这些阈值在[上文](#global-caches)描述。
 
-It supports the following settings:
+支持以下设置：
 
-* `"never"` --- Never deletes old files.
-* `"always"` --- Checks to delete old files every time Cargo runs.
-* An integer followed by "seconds", "minutes", "hours", "days", "weeks", or "months" --- Checks to delete old files at most the given time frame.
+* `"never"` --- 从不删除旧文件。
+* `"always"` --- 每次 Cargo 运行时都检查删除旧文件。
+* 一个整数后跟 "seconds"、"minutes"、"hours"、"days"、"weeks" 或 "months" --- 最多在给定的时间范围内检查删除旧文件。
 
 ### `[http]`
 
-The `[http]` table defines settings for HTTP behavior. This includes fetching
-crate dependencies and accessing remote git repositories.
+`[http]` 表定义了 HTTP 行为的设置。这包括获取 crate 依赖项和访问远程 git 仓库。
 
 #### `http.debug`
-* Type: boolean
-* Default: false
-* Environment: `CARGO_HTTP_DEBUG`
+* 类型：布尔值
+* 默认值：false
+* 环境：`CARGO_HTTP_DEBUG`
 
-If `true`, enables debugging of HTTP requests. The debug information can be
-seen by setting the `CARGO_LOG=network=debug` environment
-variable (or use `network=trace` for even more information).
+如果为 `true`，则启用 HTTP 请求的调试。可以通过设置 `CARGO_LOG=network=debug` 环境变量（或使用 `network=trace` 获取更多信息）查看调试信息。
 
-Be wary when posting logs from this output in a public location. The output
-may include headers with authentication tokens which you don't want to leak!
-Be sure to review logs before posting them.
+在公共位置发布此输出的日志时要小心。输出可能包含带有认证令牌的头部，你不想泄露！发布日志前务必检查。
 
 #### `http.proxy`
-* Type: string
-* Default: none
-* Environment: `CARGO_HTTP_PROXY` or `HTTPS_PROXY` or `https_proxy` or `http_proxy`
+* 类型：字符串
+* 默认值：无
+* 环境：`CARGO_HTTP_PROXY` 或 `HTTPS_PROXY` 或 `https_proxy` 或 `http_proxy`
 
-Sets an HTTP and HTTPS proxy to use. The format is in [libcurl format] as in
-`[protocol://]host[:port]`. If not set, Cargo will also check the `http.proxy`
-setting in your global git configuration. If none of those are set, the
-`HTTPS_PROXY` or `https_proxy` environment variables set the proxy for HTTPS
-requests, and `http_proxy` sets it for HTTP requests.
+设置要使用的 HTTP 和 HTTPS 代理。格式为 [libcurl 格式]，如 `[protocol://]host[:port]`。如果未设置，Cargo 还将检查全局 git 配置中的 `http.proxy` 设置。如果这些都未设置，`HTTPS_PROXY` 或 `https_proxy` 环境变量为 HTTPS 请求设置代理，`http_proxy` 为 HTTP 请求设置代理。
 
 #### `http.timeout`
-* Type: integer
-* Default: 30
-* Environment: `CARGO_HTTP_TIMEOUT` or `HTTP_TIMEOUT`
+* 类型：整数
+* 默认值：30
+* 环境：`CARGO_HTTP_TIMEOUT` 或 `HTTP_TIMEOUT`
 
-Sets the timeout for each HTTP request, in seconds.
+设置每个 HTTP 请求的超时时间，单位秒。
 
 #### `http.cainfo`
-* Type: string (path)
-* Default: none
-* Environment: `CARGO_HTTP_CAINFO`
+* 类型：字符串（路径）
+* 默认值：无
+* 环境：`CARGO_HTTP_CAINFO`
 
-Path to a Certificate Authority (CA) bundle file, used to verify TLS
-certificates. If not specified, Cargo attempts to use the system certificates.
+证书颁发机构（CA）捆绑文件的路径，用于验证 TLS 证书。如果未指定，Cargo 尝试使用系统证书。
 
 #### `http.proxy-cainfo`
-* Type: string (path)
-* Default: falls back to `http.cainfo` if not set
-* Environment: `CARGO_HTTP_PROXY_CAINFO`
+* 类型：字符串（路径）
+* 默认值：如果未设置，则回退到 `http.cainfo`
+* 环境：`CARGO_HTTP_PROXY_CAINFO`
 
-Path to a Certificate Authority (CA) bundle file, used to verify proxy TLS
-certificates.
+证书颁发机构（CA）捆绑文件的路径，用于验证代理 TLS 证书。
 
 #### `http.check-revoke`
-* Type: boolean
-* Default: true (Windows) false (all others)
-* Environment: `CARGO_HTTP_CHECK_REVOKE`
+* 类型：布尔值
+* 默认值：true（Windows）false（所有其他系统）
+* 环境：`CARGO_HTTP_CHECK_REVOKE`
 
-This determines whether or not TLS certificate revocation checks should be
-performed. This only works on Windows.
+这决定是否应执行 TLS 证书吊销检查。这仅在 Windows 上有效。
 
 #### `http.ssl-version`
-* Type: string or min/max table
-* Default: none
-* Environment: `CARGO_HTTP_SSL_VERSION`
+* 类型：字符串或最小/最大表
+* 默认值：无
+* 环境：`CARGO_HTTP_SSL_VERSION`
 
-This sets the minimum TLS version to use. It takes a string, with one of the
-possible values of `"default"`, `"tlsv1"`, `"tlsv1.0"`, `"tlsv1.1"`, `"tlsv1.2"`, or
-`"tlsv1.3"`.
+这设置要使用的最小 TLS 版本。它接受一个字符串，可能值为 `"default"`、`"tlsv1"`、`"tlsv1.0"`、`"tlsv1.1"`、`"tlsv1.2"` 或 `"tlsv1.3"`。
 
-This may alternatively take a table with two keys, `min` and `max`, which each
-take a string value of the same kind that specifies the minimum and maximum
-range of TLS versions to use.
+或者，这可以接受一个包含两个键 `min` 和 `max` 的表，每个键接受相同类型的字符串值，指定要使用的 TLS 版本的最小和最大范围。
 
-The default is a minimum version of `"tlsv1.0"` and a max of the newest version
-supported on your platform, typically `"tlsv1.3"`.
+默认是最小版本 `"tlsv1.0"`，最大版本为你的平台支持的最新版本，通常是 `"tlsv1.3"`。
 
 #### `http.low-speed-limit`
-* Type: integer
-* Default: 10
-* Environment: `CARGO_HTTP_LOW_SPEED_LIMIT`
+* 类型：整数
+* 默认值：10
+* 环境：`CARGO_HTTP_LOW_SPEED_LIMIT`
 
-This setting controls timeout behavior for slow connections. If the average
-transfer speed in bytes per second is below the given value for
-[`http.timeout`](#httptimeout) seconds (default 30 seconds), then the
-connection is considered too slow and Cargo will abort and retry.
+此设置控制慢速连接的 timeout 行为。如果平均传输速度（字节/秒）在 [`http.timeout`](#httptimeout) 秒（默认 30 秒）内低于给定值，则认为连接太慢，Cargo 将中止并重试。
 
 #### `http.multiplexing`
-* Type: boolean
-* Default: true
-* Environment: `CARGO_HTTP_MULTIPLEXING`
+* 类型：布尔值
+* 默认值：true
+* 环境：`CARGO_HTTP_MULTIPLEXING`
 
-When `true`, Cargo will attempt to use the HTTP2 protocol with multiplexing.
-This allows multiple requests to use the same connection, usually improving
-performance when fetching multiple files. If `false`, Cargo will use HTTP 1.1
-without pipelining.
+当为 `true` 时，Cargo 将尝试使用带有多路复用的 HTTP2 协议。这允许多个请求使用同一连接，通常在获取多个文件时提高性能。如果为 `false`，Cargo 将使用不带流水线的 HTTP 1.1。
 
 #### `http.user-agent`
-* Type: string
-* Default: Cargo's version
-* Environment: `CARGO_HTTP_USER_AGENT`
+* 类型：字符串
+* 默认值：Cargo 的版本
+* 环境：`CARGO_HTTP_USER_AGENT`
 
-Specifies a custom user-agent header to use. The default if not specified is a
-string that includes Cargo's version.
+指定要使用的自定义用户代理头。如果未指定，默认是包含 Cargo 版本的字符串。
 
 ### `[install]`
 
-The `[install]` table defines defaults for the [`cargo install`] command.
+`[install]` 表定义了 [`cargo install`] 命令的默认值。
 
 #### `install.root`
-* Type: string (path)
-* Default: Cargo's home directory
-* Environment: `CARGO_INSTALL_ROOT`
+* 类型：字符串（路径）
+* 默认值：Cargo 的 home 目录
+* 环境：`CARGO_INSTALL_ROOT`
 
-Sets the path to the root directory for installing executables for [`cargo
-install`]. Executables go into a `bin` directory underneath the root.
+设置 [`cargo install`] 安装可执行文件的根目录路径。可执行文件进入根目录下的 `bin` 目录。
 
-To track information of installed executables, some extra files, such as
-`.crates.toml` and `.crates2.json`, are also created under this root.
+为了跟踪已安装可执行文件的信息，还会在此根目录下创建一些额外文件，例如 `.crates.toml` 和 `.crates2.json`。
 
-The default if not specified is Cargo's home directory (default `.cargo` in
-your home directory).
+如果未指定，默认是 Cargo 的 home 目录（默认为 home 目录中的 `.cargo`）。
 
-Can be overridden with the `--root` command-line option.
+可以通过 `--root` 命令行选项覆盖。
 
 ### `[net]`
 
-The `[net]` table controls networking configuration.
+`[net]` 表控制网络配置。
 
 #### `net.retry`
-* Type: integer
-* Default: 3
-* Environment: `CARGO_NET_RETRY`
+* 类型：整数
+* 默认值：3
+* 环境：`CARGO_NET_RETRY`
 
-Number of times to retry possibly spurious network errors.
+重试可能虚假的网络错误的次数。
 
 #### `net.git-fetch-with-cli`
-* Type: boolean
-* Default: false
-* Environment: `CARGO_NET_GIT_FETCH_WITH_CLI`
+* 类型：布尔值
+* 默认值：false
+* 环境：`CARGO_NET_GIT_FETCH_WITH_CLI`
 
-If this is `true`, then Cargo will use the `git` executable to fetch registry
-indexes and git dependencies. If `false`, then it uses a built-in `git`
-library.
+如果为 `true`，则 Cargo 将使用 `git` 可执行文件来获取注册中心索引和 git 依赖项。如果为 `false`，则使用内置的 `git` 库。
 
-Setting this to `true` can be helpful if you have special authentication
-requirements that Cargo does not support. See [Git
-Authentication](../appendix/git-authentication.md) for more information about
-setting up git authentication.
+如果你有 Cargo 不支持的特殊身份验证要求，将此设置为 `true` 可能会有所帮助。有关设置 git 身份验证的更多信息，请参阅 [Git 身份验证](../appendix/git-authentication.md)。
 
 #### `net.offline`
-* Type: boolean
-* Default: false
-* Environment: `CARGO_NET_OFFLINE`
+* 类型：布尔值
+* 默认值：false
+* 环境：`CARGO_NET_OFFLINE`
 
-If this is `true`, then Cargo will avoid accessing the network, and attempt to
-proceed with locally cached data. If `false`, Cargo will access the network as
-needed, and generate an error if it encounters a network error.
+如果为 `true`，则 Cargo 将避免访问网络，并尝试使用本地缓存的数据继续。如果为 `false`，Cargo 将在需要时访问网络，并在遇到网络错误时生成错误。
 
-Can be overridden with the `--offline` command-line option.
+可以通过 `--offline` 命令行选项覆盖。
 
 #### `net.ssh`
 
-The `[net.ssh]` table contains settings for SSH connections.
+`[net.ssh]` 表包含 SSH 连接的设置。
 
 #### `net.ssh.known-hosts`
-* Type: array of strings
-* Default: see description
-* Environment: not supported
+* 类型：字符串数组
+* 默认值：见描述
+* 环境：不支持
 
-The `known-hosts` array contains a list of SSH host keys that should be
-accepted as valid when connecting to an SSH server (such as for SSH git
-dependencies). Each entry should be a string in a format similar to OpenSSH
-`known_hosts` files. Each string should start with one or more hostnames
-separated by commas, a space, the key type name, a space, and the
-base64-encoded key. For example:
+`known-hosts` 数组包含 SSH 主机密钥列表，这些密钥在连接到 SSH 服务器（例如用于 SSH git 依赖项）时应被接受为有效。每个条目应为类似于 OpenSSH `known_hosts` 文件的格式的字符串。每个字符串应以一个或多个用逗号分隔的主机名开头，后跟一个空格、密钥类型名称、一个空格和 base64 编码的密钥。例如：
 
 ```toml
 [net.ssh]
@@ -907,358 +723,304 @@ known-hosts = [
 ]
 ```
 
-Cargo will attempt to load known hosts keys from common locations supported in
-OpenSSH, and will join those with any listed in a Cargo configuration file.
-If any matching entry has the correct key, the connection will be allowed.
+Cargo 将尝试从 OpenSSH 支持的常见位置加载已知主机密钥，并将这些密钥与 Cargo 配置文件中列出的任何密钥连接起来。如果任何匹配的条目具有正确的密钥，则允许连接。
 
-Cargo comes with the host keys for [github.com][github-keys] built-in. If
-those ever change, you can add the new keys to the config or known_hosts file.
+Cargo 内置了 [github.com][github-keys] 的主机密钥。如果这些密钥发生变化，你可以将新密钥添加到配置或 known_hosts 文件中。
 
-See [Git Authentication](../appendix/git-authentication.md#ssh-known-hosts)
-for more details.
+更多详细信息请参阅 [Git 身份验证](../appendix/git-authentication.md#ssh-known-hosts)。
 
 [github-keys]: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints
 
 ### `[patch]`
 
-Just as you can override dependencies using [`[patch]` in
-`Cargo.toml`](overriding-dependencies.md#the-patch-section), you can
-override them in the cargo configuration file to apply those patches to
-any affected build. The format is identical to the one used in
-`Cargo.toml`.
+就像你可以在 `Cargo.toml` 中使用 [`[patch]`](overriding-dependencies.md#the-patch-section) 覆盖依赖项一样，你也可以在 Cargo 配置文件中覆盖它们，以将这些补丁应用于任何受影响的构建。格式与 `Cargo.toml` 中使用的格式相同。
 
-Since `.cargo/config.toml` files are not usually checked into source
-control, you should prefer patching using `Cargo.toml` where possible to
-ensure that other developers can compile your crate in their own
-environments. Patching through cargo configuration files is generally
-only appropriate when the patch section is automatically generated by an
-external build tool.
+由于 `.cargo/config.toml` 文件通常不检入源代码控制，因此应尽可能使用 `Cargo.toml` 进行补丁，以确保其他开发人员可以在自己的环境中编译你的 crate。通过 Cargo 配置文件进行补丁通常仅适用于补丁部分由外部构建工具自动生成的情况。
 
-If a given dependency is patched both in a cargo configuration file and
-a `Cargo.toml` file, the patch in the configuration file is used. If
-multiple configuration files patch the same dependency, standard cargo
-configuration merging is used, which prefers the value defined closest
-to the current directory, with `$HOME/.cargo/config.toml` taking the
-lowest precedence.
+如果某个依赖项在 Cargo 配置文件和 `Cargo.toml` 文件中都被修补，则使用配置文件中的补丁。如果多个配置文件修补同一依赖项，则使用标准的 Cargo 配置合并，优先使用最接近当前目录定义的值，`$HOME/.cargo/config.toml` 的优先级最低。
 
-Relative `path` dependencies in such a `[patch]` section are resolved
-relative to the configuration file they appear in.
+此类 `[patch]` 部分中的相对 `path` 依赖项相对于它们出现的配置文件解析。
 
 ### `[profile]`
 
-The `[profile]` table can be used to globally change profile settings, and
-override settings specified in `Cargo.toml`. It has the same syntax and
-options as profiles specified in `Cargo.toml`. See the [Profiles chapter] for
-details about the options.
+`[profile]` 表可用于全局更改配置文件设置，并覆盖 `Cargo.toml` 中指定的设置。它具有与 `Cargo.toml` 中指定的配置文件相同的语法和选项。有关选项的详细信息，请参阅[配置文件章节]。
 
-[Profiles chapter]: profiles.md
+[配置文件章节]: profiles.md
 
 #### `[profile.<name>.build-override]`
-* Environment: `CARGO_PROFILE_<name>_BUILD_OVERRIDE_<key>`
+* 环境：`CARGO_PROFILE_<name>_BUILD_OVERRIDE_<key>`
 
-The build-override table overrides settings for build scripts, proc macros,
-and their dependencies. It has the same keys as a normal profile. See the
-[overrides section](profiles.md#overrides) for more details.
+build-override 表覆盖构建脚本、过程宏及其依赖项的设置。它具有与普通配置文件相同的键。更多详细信息请参阅[覆盖部分](profiles.md#overrides)。
 
 #### `[profile.<name>.package.<name>]`
-* Environment: not supported
+* 环境：不支持
 
-The package table overrides settings for specific packages. It has the same
-keys as a normal profile, minus the `panic`, `lto`, and `rpath` settings. See
-the [overrides section](profiles.md#overrides) for more details.
+package 表覆盖特定包的设置。它具有与普通配置文件相同的键，减去 `panic`、`lto` 和 `rpath` 设置。更多详细信息请参阅[覆盖部分](profiles.md#overrides)。
 
 #### `profile.<name>.codegen-units`
-* Type: integer
-* Default: See profile docs.
-* Environment: `CARGO_PROFILE_<name>_CODEGEN_UNITS`
+* 类型：整数
+* 默认值：见配置文件文档。
+* 环境：`CARGO_PROFILE_<name>_CODEGEN_UNITS`
 
-See [codegen-units](profiles.md#codegen-units).
+见 [codegen-units](profiles.md#codegen-units)。
 
 #### `profile.<name>.debug`
-* Type: integer or boolean
-* Default: See profile docs.
-* Environment: `CARGO_PROFILE_<name>_DEBUG`
+* 类型：整数或布尔值
+* 默认值：见配置文件文档。
+* 环境：`CARGO_PROFILE_<name>_DEBUG`
 
-See [debug](profiles.md#debug).
+见 [debug](profiles.md#debug)。
 
 #### `profile.<name>.split-debuginfo`
-* Type: string
-* Default: See profile docs.
-* Environment: `CARGO_PROFILE_<name>_SPLIT_DEBUGINFO`
+* 类型：字符串
+* 默认值：见配置文件文档。
+* 环境：`CARGO_PROFILE_<name>_SPLIT_DEBUGINFO`
 
-See [split-debuginfo](profiles.md#split-debuginfo).
+见 [split-debuginfo](profiles.md#split-debuginfo)。
 
 #### `profile.<name>.debug-assertions`
-* Type: boolean
-* Default: See profile docs.
-* Environment: `CARGO_PROFILE_<name>_DEBUG_ASSERTIONS`
+* 类型：布尔值
+* 默认值：见配置文件文档。
+* 环境：`CARGO_PROFILE_<name>_DEBUG_ASSERTIONS`
 
-See [debug-assertions](profiles.md#debug-assertions).
+见 [debug-assertions](profiles.md#debug-assertions)。
 
 #### `profile.<name>.incremental`
-* Type: boolean
-* Default: See profile docs.
-* Environment: `CARGO_PROFILE_<name>_INCREMENTAL`
+* 类型：布尔值
+* 默认值：见配置文件文档。
+* 环境：`CARGO_PROFILE_<name>_INCREMENTAL`
 
-See [incremental](profiles.md#incremental).
+见 [incremental](profiles.md#incremental)。
 
 #### `profile.<name>.lto`
-* Type: string or boolean
-* Default: See profile docs.
-* Environment: `CARGO_PROFILE_<name>_LTO`
+* 类型：字符串或布尔值
+* 默认值：见配置文件文档。
+* 环境：`CARGO_PROFILE_<name>_LTO`
 
-See [lto](profiles.md#lto).
+见 [lto](profiles.md#lto)。
 
 #### `profile.<name>.overflow-checks`
-* Type: boolean
-* Default: See profile docs.
-* Environment: `CARGO_PROFILE_<name>_OVERFLOW_CHECKS`
+* 类型：布尔值
+* 默认值：见配置文件文档。
+* 环境：`CARGO_PROFILE_<name>_OVERFLOW_CHECKS`
 
-See [overflow-checks](profiles.md#overflow-checks).
+见 [overflow-checks](profiles.md#overflow-checks)。
 
 #### `profile.<name>.opt-level`
-* Type: integer or string
-* Default: See profile docs.
-* Environment: `CARGO_PROFILE_<name>_OPT_LEVEL`
+* 类型：整数或字符串
+* 默认值：见配置文件文档。
+* 环境：`CARGO_PROFILE_<name>_OPT_LEVEL`
 
-See [opt-level](profiles.md#opt-level).
+见 [opt-level](profiles.md#opt-level)。
 
 #### `profile.<name>.panic`
-* Type: string
-* Default: See profile docs.
-* Environment: `CARGO_PROFILE_<name>_PANIC`
+* 类型：字符串
+* 默认值：见配置文件文档。
+* 环境：`CARGO_PROFILE_<name>_PANIC`
 
-See [panic](profiles.md#panic).
+见 [panic](profiles.md#panic)。
 
 #### `profile.<name>.rpath`
-* Type: boolean
-* Default: See profile docs.
-* Environment: `CARGO_PROFILE_<name>_RPATH`
+* 类型：布尔值
+* 默认值：见配置文件文档。
+* 环境：`CARGO_PROFILE_<name>_RPATH`
 
-See [rpath](profiles.md#rpath).
+见 [rpath](profiles.md#rpath)。
 
 #### `profile.<name>.strip`
-* Type: string or boolean
-* Default: See profile docs.
-* Environment: `CARGO_PROFILE_<name>_STRIP`
+* 类型：字符串或布尔值
+* 默认值：见配置文件文档。
+* 环境：`CARGO_PROFILE_<name>_STRIP`
 
-See [strip](profiles.md#strip).
+见 [strip](profiles.md#strip)。
 
 ### `[resolver]`
 
-The `[resolver]` table overrides [dependency resolution behavior](resolver.md) for local development (e.g. excludes `cargo install`).
+`[resolver]` 表覆盖本地开发（例如排除 `cargo install`）的[依赖项解析行为](resolver.md)。
 
 #### `resolver.incompatible-rust-versions`
-* Type: string
-* Default: See [`resolver`](resolver.md#resolver-versions) docs
-* Environment: `CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS`
+* 类型：字符串
+* 默认值：见 [`resolver`](resolver.md#resolver-versions) 文档
+* 环境：`CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS`
 
-When resolving which version of a dependency to use, select how versions with incompatible `package.rust-version`s are treated.
-Values include:
-- `allow`: treat `rust-version`-incompatible versions like any other version
-- `fallback`: only consider `rust-version`-incompatible versions if no other version matched
+解析要使用的依赖项版本时，选择如何处理具有不兼容 `package.rust-version` 的版本。值包括：
+- `allow`：将 `rust-version` 不兼容的版本视为任何其他版本
+- `fallback`：仅在没有其他版本匹配时才考虑 `rust-version` 不兼容的版本
 
-Can be overridden with
-- `--ignore-rust-version` CLI option
-- Setting the dependency's version requirement higher than any version with a compatible `rust-version`
-- Specifying the version to `cargo update` with `--precise`
+可以通过以下方式覆盖：
+- `--ignore-rust-version` CLI 选项
+- 将依赖项的版本要求设置为高于任何具有兼容 `rust-version` 的版本
+- 使用 `--precise` 向 `cargo update` 指定版本
 
-See the [resolver](resolver.md#rust-version) chapter for more details.
+更多详细信息请参阅[解析器](resolver.md#rust-version)章节。
 
-> **MSRV:**
-> - `allow` is supported on any version
-> - `fallback` is respected as of 1.84
+> **MSRV：**
+> - `allow` 在任何版本上都支持
+> - `fallback` 从 1.84 版本开始被尊重
 
 ### `[registries]`
 
-The `[registries]` table is used for specifying additional [registries]. It
-consists of a sub-table for each named registry.
+`[registries]` 表用于指定额外的[注册中心][registries]。它由每个命名注册中心的子表组成。
 
 #### `registries.<name>.index`
-* Type: string (url)
-* Default: none
-* Environment: `CARGO_REGISTRIES_<name>_INDEX`
+* 类型：字符串（url）
+* 默认值：无
+* 环境：`CARGO_REGISTRIES_<name>_INDEX`
 
-Specifies the URL of the index for the registry.
+指定注册中心索引的 URL。
 
 #### `registries.<name>.token`
-* Type: string
-* Default: none
-* Environment: `CARGO_REGISTRIES_<name>_TOKEN`
+* 类型：字符串
+* 默认值：无
+* 环境：`CARGO_REGISTRIES_<name>_TOKEN`
 
-Specifies the authentication token for the given registry. This value should
-only appear in the [credentials](#credentials) file. This is used for registry
-commands like [`cargo publish`] that require authentication.
+指定给定注册中心的认证令牌。此值应仅出现在[凭证](#credentials)文件中。用于需要身份验证的注册中心命令，如 [`cargo publish`]。
 
-Can be overridden with the `--token` command-line option.
+可以通过 `--token` 命令行选项覆盖。
 
 #### `registries.<name>.credential-provider`
-* Type: string or array of path and arguments
-* Default: none
-* Environment: `CARGO_REGISTRIES_<name>_CREDENTIAL_PROVIDER`
+* 类型：字符串或路径和参数数组
+* 默认值：无
+* 环境：`CARGO_REGISTRIES_<name>_CREDENTIAL_PROVIDER`
 
-Specifies the credential provider for the given registry. If not set, the
-providers in [`registry.global-credential-providers`](#registryglobal-credential-providers)
-will be used.
+指定给定注册中心的凭证提供者。如果未设置，将使用 [`registry.global-credential-providers`](#registryglobal-credential-providers) 中的提供者。
 
-If specified as a string, path and arguments will be split on spaces. For
-paths or arguments that contain spaces, use an array.
+如果指定为字符串，路径和参数将按空格拆分。对于包含空格的路径或参数，请使用数组。
 
-If the value exists in the [`[credential-alias]`](#credential-alias) table, the alias will be used.
+如果值存在于 [`[credential-alias]`](#credential-alias) 表中，则将使用别名。
 
-See [Registry Authentication](registry-authentication.md) for more information.
+更多信息请参阅[注册中心认证](registry-authentication.md)。
 
 #### `registries.crates-io.protocol`
-* Type: string
-* Default: `"sparse"`
-* Environment: `CARGO_REGISTRIES_CRATES_IO_PROTOCOL`
+* 类型：字符串
+* 默认值：`"sparse"`
+* 环境：`CARGO_REGISTRIES_CRATES_IO_PROTOCOL`
 
-Specifies the protocol used to access crates.io. Allowed values are `git` or `sparse`.
+指定用于访问 crates.io 的协议。允许的值为 `git` 或 `sparse`。
 
-`git` causes Cargo to clone the entire index of all packages ever published to [crates.io] from <https://github.com/rust-lang/crates.io-index/>.
-This can have performance implications due to the size of the index.
-`sparse` is a newer protocol which uses HTTPS to download only what is necessary from <https://index.crates.io/>.
-This can result in a significant performance improvement for resolving new dependencies in most situations.
+`git` 导致 Cargo 从 <https://github.com/rust-lang/crates.io-index/> 克隆所有曾经发布到 [crates.io] 的包的完整索引。由于索引的大小，这可能会影响性能。`sparse` 是一种较新的协议，它使用 HTTPS 仅从 <https://index.crates.io/> 下载必要的内容。在大多数情况下，这可以显著提高解析新依赖项的性能。
 
-More information about registry protocols may be found in the [Registries chapter](registries.md).
+有关注册中心协议的更多信息，请参阅[注册中心章节](registries.md)。
 
 ### `[registry]`
 
-The `[registry]` table controls the default registry used when one is not
-specified.
+`[registry]` 表控制未指定时使用的默认注册中心。
 
 #### `registry.index`
 
-This value is no longer accepted and should not be used.
+此值不再被接受，不应使用。
 
 #### `registry.default`
-* Type: string
-* Default: `"crates-io"`
-* Environment: `CARGO_REGISTRY_DEFAULT`
+* 类型：字符串
+* 默认值：`"crates-io"`
+* 环境：`CARGO_REGISTRY_DEFAULT`
 
-The name of the registry (from the [`registries` table](#registries)) to use
-by default for registry commands like [`cargo publish`].
+注册中心（来自 [`registries` 表](#registries)）的名称，默认用于注册中心命令，如 [`cargo publish`]。
 
-Can be overridden with the `--registry` command-line option.
+可以通过 `--registry` 命令行选项覆盖。
 
 #### `registry.credential-provider`
-* Type: string or array of path and arguments
-* Default: none
-* Environment: `CARGO_REGISTRY_CREDENTIAL_PROVIDER`
+* 类型：字符串或路径和参数数组
+* 默认值：无
+* 环境：`CARGO_REGISTRY_CREDENTIAL_PROVIDER`
 
-Specifies the credential provider for [crates.io]. If not set, the
-providers in [`registry.global-credential-providers`](#registryglobal-credential-providers)
-will be used.
+指定 [crates.io] 的凭证提供者。如果未设置，将使用 [`registry.global-credential-providers`](#registryglobal-credential-providers) 中的提供者。
 
-If specified as a string, path and arguments will be split on spaces. For
-paths or arguments that contain spaces, use an array.
+如果指定为字符串，路径和参数将按空格拆分。对于包含空格的路径或参数，请使用数组。
 
-If the value exists in the `[credential-alias]` table, the alias will be used.
+如果值存在于 `[credential-alias]` 表中，则将使用别名。
 
-See [Registry Authentication](registry-authentication.md) for more information.
+更多信息请参阅[注册中心认证](registry-authentication.md)。
 
 #### `registry.token`
-* Type: string
-* Default: none
-* Environment: `CARGO_REGISTRY_TOKEN`
+* 类型：字符串
+* 默认值：无
+* 环境：`CARGO_REGISTRY_TOKEN`
 
-Specifies the authentication token for [crates.io]. This value should only
-appear in the [credentials](#credentials) file. This is used for registry
-commands like [`cargo publish`] that require authentication.
+指定 [crates.io] 的认证令牌。此值应仅出现在[凭证](#credentials)文件中。用于需要身份验证的注册中心命令，如 [`cargo publish`]。
 
-Can be overridden with the `--token` command-line option.
+可以通过 `--token` 命令行选项覆盖。
 
 #### `registry.global-credential-providers`
-* Type: array
-* Default: `["cargo:token"]`
-* Environment: `CARGO_REGISTRY_GLOBAL_CREDENTIAL_PROVIDERS`
+* 类型：数组
+* 默认值：`["cargo:token"]`
+* 环境：`CARGO_REGISTRY_GLOBAL_CREDENTIAL_PROVIDERS`
 
-Specifies the list of global credential providers. If credential provider is not set
-for a specific registry using `registries.<name>.credential-provider`, Cargo will use
-the credential providers in this list. Providers toward the end of the list have precedence.
+指定全局凭证提供者列表。如果未使用 `registries.<name>.credential-provider` 为特定注册中心设置凭证提供者，Cargo 将使用此列表中的凭证提供者。列表末尾的提供者具有优先级。
 
-Path and arguments are split on spaces. If the path or arguments contains spaces, the credential
-provider should be defined in the [`[credential-alias]`](#credential-alias) table and
-referenced here by its alias.
+路径和参数按空格拆分。如果路径或参数包含空格，则应在 [`[credential-alias]`](#credential-alias) 表中定义凭证提供者，并在此处通过其别名引用。
 
-See [Registry Authentication](registry-authentication.md) for more information.
+更多信息请参阅[注册中心认证](registry-authentication.md)。
 
 ### `[source]`
 
-The `[source]` table defines the registry sources available. See [Source
-Replacement] for more information. It consists of a sub-table for each named
-source. A source should only define one kind (directory, registry,
-local-registry, or git).
+`[source]` 表定义可用的注册中心源。更多信息请参阅[源替换][Source Replacement]。它由每个命名源的子表组成。一个源应只定义一种类型（目录、注册中心、本地注册中心或 git）。
 
 #### `source.<name>.replace-with`
-* Type: string
-* Default: none
-* Environment: not supported
+* 类型：字符串
+* 默认值：无
+* 环境：不支持
 
-If set, replace this source with the given named source or named registry.
+如果设置，用给定的命名源或命名注册中心替换此源。
 
 #### `source.<name>.directory`
-* Type: string (path)
-* Default: none
-* Environment: not supported
+* 类型：字符串（路径）
+* 默认值：无
+* 环境：不支持
 
-Sets the path to a directory to use as a directory source.
+设置用作目录源的路径。
 
 #### `source.<name>.registry`
-* Type: string (url)
-* Default: none
-* Environment: not supported
+* 类型：字符串（url）
+* 默认值：无
+* 环境：不支持
 
-Sets the URL to use for a registry source.
+设置用于注册中心源的 URL。
 
 #### `source.<name>.local-registry`
-* Type: string (path)
-* Default: none
-* Environment: not supported
+* 类型：字符串（路径）
+* 默认值：无
+* 环境：不支持
 
-Sets the path to a directory to use as a local registry source.
+设置用作本地注册中心源的路径。
 
 #### `source.<name>.git`
-* Type: string (url)
-* Default: none
-* Environment: not supported
+* 类型：字符串（url）
+* 默认值：无
+* 环境：不支持
 
-Sets the URL to use for a git repository source.
+设置用于 git 仓库源的 URL。
 
 #### `source.<name>.branch`
-* Type: string
-* Default: none
-* Environment: not supported
+* 类型：字符串
+* 默认值：无
+* 环境：不支持
 
-Sets the branch name to use for a git repository.
+设置用于 git 仓库的分支名。
 
-If none of `branch`, `tag`, or `rev` is set, defaults to the `master` branch.
+如果未设置 `branch`、`tag` 或 `rev` 中的任何一个，则默认为 `master` 分支。
 
 #### `source.<name>.tag`
-* Type: string
-* Default: none
-* Environment: not supported
+* 类型：字符串
+* 默认值：无
+* 环境：不支持
 
-Sets the tag name to use for a git repository.
+设置用于 git 仓库的标签名。
 
-If none of `branch`, `tag`, or `rev` is set, defaults to the `master` branch.
+如果未设置 `branch`、`tag` 或 `rev` 中的任何一个，则默认为 `master` 分支。
 
 #### `source.<name>.rev`
-* Type: string
-* Default: none
-* Environment: not supported
+* 类型：字符串
+* 默认值：无
+* 环境：不支持
 
-Sets the [revision] to use for a git repository.
+设置用于 git 仓库的[修订版本][revision]。
 
-If none of `branch`, `tag`, or `rev` is set, defaults to the `master` branch.
-
+如果未设置 `branch`、`tag` 或 `rev` 中的任何一个，则默认为 `master` 分支。
 
 ### `[target]`
 
-The `[target]` table is used for specifying settings for specific platform
-targets. It consists of a sub-table which is either a [platform triple][target triple] 
-or a [`cfg()` expression]. The given values will be used if the target platform
-matches either the `<triple>` value or the `<cfg>` expression.
+`[target]` 表用于指定特定平台目标的设置。它由一个子表组成，该子表可以是[平台三元组][target triple]或 [`cfg()` 表达式][`cfg()` expression]。如果目标平台匹配 `<triple>` 值或 `<cfg>` 表达式，则将使用给定的值。
 
 ```toml
 [target.thumbv7m-none-eabi]
@@ -1271,82 +1033,60 @@ runner = "my-arm-wrapper"
 rustflags = ["…", "…"]
 ```
 
-`cfg` values come from those built-in to the compiler (run `rustc --print=cfg`
-to view) and extra `--cfg` flags passed to `rustc` (such as those defined in
-`RUSTFLAGS`). Do not try to match on `debug_assertions`, `test`, Cargo features
-like `feature="foo"`, or values set by [build scripts].
+`cfg` 值来自编译器内置的值（运行 `rustc --print=cfg` 查看）和传递给 `rustc` 的额外 `--cfg` 标志（例如在 `RUSTFLAGS` 中定义的）。不要尝试匹配 `debug_assertions`、`test`、Cargo 特性如 `feature="foo"` 或由[构建脚本][build scripts]设置的值。
 
-If using a target spec JSON file, the [`<triple>`] value is the filename stem.
-For example `--target foo/bar.json` would match `[target.bar]`.
+如果使用目标规范 JSON 文件，[`<triple>`] 值是文件名主干。例如 `--target foo/bar.json` 将匹配 `[target.bar]`。
 
 #### `target.<triple>.ar`
 
-This option is deprecated and unused.
+此选项已弃用且未使用。
 
 #### `target.<triple>.linker`
-* Type: string (program path)
-* Default: none
-* Environment: `CARGO_TARGET_<triple>_LINKER`
+* 类型：字符串（程序路径）
+* 默认值：无
+* 环境：`CARGO_TARGET_<triple>_LINKER`
 
-Specifies the linker which is passed to `rustc` (via [`-C linker`]) when the
-[`<triple>`] is being compiled for. By default, the linker is not overridden.
+指定传递给 `rustc` 的链接器（通过 [`-C linker`]），当为 [`<triple>`] 编译时。默认情况下，链接器不会被覆盖。
 
 #### `target.<cfg>.linker`
-This is similar to the [target linker](#targettriplelinker), but using
-a [`cfg()` expression]. If both a [`<triple>`] and `<cfg>` runner match,
-the `<triple>` will take precedence. It is an error if more than one
-`<cfg>` runner matches the current target.
+这与[目标链接器](#targettriplelinker)类似，但使用 [`cfg()` 表达式][`cfg()` expression]。如果 [`<triple>`] 和 `<cfg>` runner 都匹配，则 `<triple>` 优先。如果多个 `<cfg>` runner 匹配当前目标，则会导致错误。
 
 #### `target.<triple>.runner`
-* Type: string or array of strings ([program path with args])
-* Default: none
-* Environment: `CARGO_TARGET_<triple>_RUNNER`
+* 类型：字符串或字符串数组（[带参数的程序路径]）
+* 默认值：无
+* 环境：`CARGO_TARGET_<triple>_RUNNER`
 
-If a runner is provided, executables for the target [`<triple>`] will be
-executed by invoking the specified runner with the actual executable passed as
-an argument. This applies to [`cargo run`], [`cargo test`] and [`cargo bench`]
-commands. By default, compiled executables are executed directly.
+如果提供了 runner，则目标 [`<triple>`] 的可执行文件将通过调用指定的 runner 并将实际可执行文件作为参数传递来执行。这适用于 [`cargo run`]、[`cargo test`] 和 [`cargo bench`] 命令。默认情况下，编译的可执行文件直接执行。
 
 #### `target.<cfg>.runner`
 
-This is similar to the [target runner](#targettriplerunner), but using
-a [`cfg()` expression]. If both a [`<triple>`] and `<cfg>` runner match,
-the `<triple>` will take precedence. It is an error if more than one
-`<cfg>` runner matches the current target.
+这与[目标 runner](#targettriplerunner) 类似，但使用 [`cfg()` 表达式][`cfg()` expression]。如果 [`<triple>`] 和 `<cfg>` runner 都匹配，则 `<triple>` 优先。如果多个 `<cfg>` runner 匹配当前目标，则会导致错误。
 
 #### `target.<triple>.rustflags`
-* Type: string or array of strings
-* Default: none
-* Environment: `CARGO_TARGET_<triple>_RUSTFLAGS`
+* 类型：字符串或字符串数组
+* 默认值：无
+* 环境：`CARGO_TARGET_<triple>_RUSTFLAGS`
 
-Passes a set of custom flags to the compiler for this [`<triple>`]. 
-The value may be an array of strings or a space-separated string.
+为此 [`<triple>`] 传递一组自定义标志给编译器。值可以是字符串数组或空格分隔的字符串。
 
-See [`build.rustflags`](#buildrustflags) for more details on the different
-ways to specific extra flags.
+有关指定额外标志的不同方式的更多详细信息，请参阅 [`build.rustflags`](#buildrustflags)。
 
 #### `target.<cfg>.rustflags`
 
-This is similar to the [target rustflags](#targettriplerustflags), but
-using a [`cfg()` expression]. If several `<cfg>` and [`<triple>`] entries
-match the current target, the flags are joined together.
+这与[目标 rustflags](#targettriplerustflags) 类似，但使用 [`cfg()` 表达式][`cfg()` expression]。如果多个 `<cfg>` 和 [`<triple>`] 条目匹配当前目标，则标志将连接在一起。
 
 #### `target.<triple>.rustdocflags`
-* Type: string or array of strings
-* Default: none
-* Environment: `CARGO_TARGET_<triple>_RUSTDOCFLAGS`
+* 类型：字符串或字符串数组
+* 默认值：无
+* 环境：`CARGO_TARGET_<triple>_RUSTDOCFLAGS`
 
-Passes a set of custom flags to the compiler for this [`<triple>`].
-The value may be an array of strings or a space-separated string.
+为此 [`<triple>`] 传递一组自定义标志给编译器。值可以是字符串数组或空格分隔的字符串。
 
-See [`build.rustdocflags`](#buildrustdocflags) for more details on the different
-ways to specific extra flags.
+有关指定额外标志的不同方式的更多详细信息，请参阅 [`build.rustdocflags`](#buildrustdocflags)。
 
 #### `target.<triple>.<links>`
 
-The links sub-table provides a way to [override a build script]. When
-specified, the build script for the given `links` library will not be
-run, and the given values will be used instead.
+links 子表提供了一种[覆盖构建脚本][override a build script]的方式。当指定时，将不会运行给定 `links` 库的构建脚本，而是使用给定的值。
 
 ```toml
 [target.x86_64-unknown-linux-gnu.foo]
@@ -1362,80 +1102,77 @@ metadata_key2 = "value"
 
 ### `[term]`
 
-The `[term]` table controls terminal output and interaction.
+`[term]` 表控制终端输出和交互。
 
 #### `term.quiet`
-* Type: boolean
-* Default: false
-* Environment: `CARGO_TERM_QUIET`
+* 类型：布尔值
+* 默认值：false
+* 环境：`CARGO_TERM_QUIET`
 
-Controls whether or not log messages are displayed by Cargo.
+控制 Cargo 是否显示日志消息。
 
-Specifying the `--quiet` flag will override and force quiet output.
-Specifying the `--verbose` flag will override and disable quiet output.
+指定 `--quiet` 标志将覆盖并强制静默输出。指定 `--verbose` 标志将覆盖并禁用静默输出。
 
 #### `term.verbose`
-* Type: boolean
-* Default: false
-* Environment: `CARGO_TERM_VERBOSE`
+* 类型：布尔值
+* 默认值：false
+* 环境：`CARGO_TERM_VERBOSE`
 
-Controls whether or not extra detailed messages are displayed by Cargo.
+控制 Cargo 是否显示额外的详细消息。
 
-Specifying the `--quiet` flag will override and disable verbose output.
-Specifying the `--verbose` flag will override and force verbose output.
+指定 `--quiet` 标志将覆盖并禁用详细输出。指定 `--verbose` 标志将覆盖并强制详细输出。
 
 #### `term.color`
-* Type: string
-* Default: `"auto"`
-* Environment: `CARGO_TERM_COLOR`
+* 类型：字符串
+* 默认值：`"auto"`
+* 环境：`CARGO_TERM_COLOR`
 
-Controls whether or not colored output is used in the terminal. Possible values:
+控制终端中是否使用彩色输出。可能的值：
 
-* `auto` (default): Automatically detect if color support is available on the
-  terminal.
-* `always`: Always display colors.
-* `never`: Never display colors.
+* `auto`（默认）：自动检测终端是否支持颜色。
+* `always`：始终显示颜色。
+* `never`：从不显示颜色。
 
-Can be overridden with the `--color` command-line option.
+可以通过 `--color` 命令行选项覆盖。
 
 #### `term.hyperlinks`
-* Type: bool
-* Default: auto-detect
-* Environment: `CARGO_TERM_HYPERLINKS`
+* 类型：布尔值
+* 默认值：自动检测
+* 环境：`CARGO_TERM_HYPERLINKS`
 
-Controls whether or not hyperlinks are used in the terminal.
+控制终端中是否使用超链接。
 
 #### `term.unicode`
-* Type: bool
-* Default: auto-detect
-* Environment: `CARGO_TERM_UNICODE`
+* 类型：布尔值
+* 默认值：自动检测
+* 环境：`CARGO_TERM_UNICODE`
 
-Control whether output can be rendered using non-ASCII unicode characters.
+控制输出是否可以使用非 ASCII unicode 字符渲染。
 
 #### `term.progress.when`
-* Type: string
-* Default: `"auto"`
-* Environment: `CARGO_TERM_PROGRESS_WHEN`
+* 类型：字符串
+* 默认值：`"auto"`
+* 环境：`CARGO_TERM_PROGRESS_WHEN`
 
-Controls whether or not progress bar is shown in the terminal. Possible values:
+控制终端中是否显示进度条。可能的值：
 
-* `auto` (default): Intelligently guess whether to show progress bar.
-* `always`: Always show progress bar.
-* `never`: Never show progress bar.
+* `auto`（默认）：智能猜测是否显示进度条。
+* `always`：始终显示进度条。
+* `never`：从不显示进度条。
 
 #### `term.progress.width`
-* Type: integer
-* Default: none
-* Environment: `CARGO_TERM_PROGRESS_WIDTH`
+* 类型：整数
+* 默认值：无
+* 环境：`CARGO_TERM_PROGRESS_WIDTH`
 
-Sets the width for progress bar.
+设置进度条的宽度。
 
 #### `term.progress.term-integration`
-* Type: bool
-* Default: auto-detect
-* Environment: `CARGO_TERM_PROGRESS_TERM_INTEGRATION`
+* 类型：布尔值
+* 默认值：自动检测
+* 环境：`CARGO_TERM_PROGRESS_TERM_INTEGRATION`
 
-Report progress to the terminal emulator for display in places like the task bar.
+向终端模拟器报告进度，以便在任务栏等位置显示。
 
 [`cargo bench`]: ../commands/cargo-bench.md
 [`cargo login`]: ../commands/cargo-login.md
@@ -1454,10 +1191,10 @@ Report progress to the terminal emulator for display in places like the task bar
 [`-C linker`]: ../../rustc/codegen-options/index.md#linker
 [override a build script]: build-scripts.md#overriding-build-scripts
 [toml]: https://toml.io/
-[incremental compilation]: profiles.md#incremental
-[program path with args]: #executable-paths-with-arguments
-[libcurl format]: https://everything.curl.dev/transfers/conn/proxies#proxy-types
-[source replacement]: source-replacement.md
+[增量编译]: profiles.md#incremental
+[带参数的程序路径]: #executable-paths-with-arguments
+[libcurl 格式]: https://everything.curl.dev/transfers/conn/proxies#proxy-types
+[Source Replacement]: source-replacement.md
 [revision]: https://git-scm.com/docs/gitrevisions
 [registries]: registries.md
 [`cargo:token`]: registry-authentication.md#cargotoken
