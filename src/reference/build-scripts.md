@@ -1,277 +1,166 @@
-# Build Scripts
+# 构建脚本 {#build-scripts}
 
-Some packages need to compile third-party non-Rust code, for example C
-libraries. Other packages need to link to C libraries which can either be
-located on the system or possibly need to be built from source. Others still
-need facilities for functionality such as code generation before building (think
-parser generators).
+有些包需要编译第三方的非 Rust 代码，例如 C 库。其他包可能需要链接到 C 库，这些库可能位于系统上，或者可能需要从源代码构建。还有一些包需要诸如构建前代码生成（例如解析器生成器）等功能。
 
-Cargo does not aim to replace other tools that are well-optimized for these
-tasks, but it does integrate with them with custom build scripts. Placing a
-file named `build.rs` in the root of a package will cause Cargo to compile
-that script and execute it just before building the package.
+Cargo 的目标不是替换那些针对这些任务优化良好的其他工具，但它确实通过自定义构建脚本与它们集成。在包的根目录中放置一个名为 `build.rs` 的文件将导致 Cargo 编译该脚本并在构建包之前执行它。
 
 ```rust,ignore
-// Example custom build script.
+// 自定义构建脚本示例。
 fn main() {
-    // Tell Cargo that if the given file changes, to rerun this build script.
+    // 告诉 Cargo，如果给定的文件发生变化，则重新运行此构建脚本。
     println!("cargo::rerun-if-changed=src/hello.c");
-    // Use the `cc` crate to build a C file and statically link it.
+    // 使用 `cc` crate 构建一个 C 文件并静态链接它。
     cc::Build::new()
         .file("src/hello.c")
         .compile("hello");
 }
 ```
 
-Some example use cases of build scripts are:
+构建脚本的一些示例用例包括：
 
-* Building a bundled C library.
-* Finding a C library on the host system.
-* Generating a Rust module from a specification.
-* Performing any platform-specific configuration needed for the crate.
+* 构建捆绑的 C 库。
+* 在主机系统上查找 C 库。
+* 根据规范生成 Rust 模块。
+* 执行 crate 所需的任何平台特定配置。
 
-The sections below describe how build scripts work, and the [examples
-chapter](build-script-examples.md) shows a variety of examples on how to write
-scripts.
+以下部分描述了构建脚本的工作原理，[示例章节](build-script-examples.md)展示了如何编写脚本的各种示例。
 
-> Note: The [`package.build` manifest key](manifest.md#the-build-field) can be
-> used to change the name of the build script, or disable it entirely.
+> 注意：可以使用 [`package.build` 清单键](manifest.md#the-build-field) 来更改构建脚本的名称，或完全禁用它。
 
-## Life Cycle of a Build Script
+## 构建脚本的生命周期 {#life-cycle-of-a-build-script}
 
-Just before a package is built, Cargo will compile a build script into an
-executable (if it has not already been built). It will then run the script,
-which may perform any number of tasks. The script may communicate with Cargo
-by printing specially formatted commands prefixed with `cargo::` to stdout.
+在构建包之前，Cargo 会将构建脚本编译为可执行文件（如果尚未构建）。然后它将运行该脚本，该脚本可以执行任意数量的任务。脚本可以通过向 stdout 打印以 `cargo::` 为前缀的特殊格式命令来与 Cargo 通信。
 
-The build script will be rebuilt if any of its source files or dependencies
-change.
+如果构建脚本的任何源文件或依赖项发生变化，它将重新构建。
 
-By default, Cargo will re-run the build script if any of the files in the
-package changes. Typically it is best to use the `rerun-if` commands,
-described in the [change detection](#change-detection) section below, to
-narrow the focus of what triggers a build script to run again.
+默认情况下，如果包中的任何文件发生变化，Cargo 将重新运行构建脚本。通常，最好使用下面[变更检测](#change-detection)部分描述的 `rerun-if` 命令来缩小触发构建脚本重新运行的范围。
 
-Once the build script successfully finishes executing, the rest of the package
-will be compiled. Scripts should exit with a non-zero exit code to halt the
-build if there is an error, in which case the build script's output will be
-displayed on the terminal.
+一旦构建脚本成功执行完毕，包的其余部分将被编译。如果出现错误，脚本应以非零退出代码退出以停止构建，此时构建脚本的输出将显示在终端上。
 
-## Inputs to the Build Script
+## 构建脚本的输入 {#inputs-to-the-build-script}
 
-When the build script is run, there are a number of inputs to the build script,
-all passed in the form of [environment variables][build-env].
+当构建脚本运行时，有许多输入传递给构建脚本，所有输入都以[环境变量][build-env]的形式传递。
 
-In addition to environment variables, the build script’s current directory is
-the source directory of the build script’s package.
+除了环境变量之外，构建脚本的当前目录是构建脚本包的源目录。
 
 [build-env]: environment-variables.md#environment-variables-cargo-sets-for-build-scripts
 
-## Outputs of the Build Script
+## 构建脚本的输出 {#outputs-of-the-build-script}
 
-Build scripts may save any output files or intermediate artifacts in the
-directory specified in the [`OUT_DIR` environment variable][build-env]. Scripts
-should not modify any files outside of that directory.
+构建脚本可以将任何输出文件或中间产物保存在 [`OUT_DIR` 环境变量][build-env]指定的目录中。脚本不应修改该目录之外的任何文件。
 
-Build scripts communicate with Cargo by printing to stdout. Cargo will
-interpret each line that starts with `cargo::` as an instruction that will
-influence compilation of the package. All other lines are ignored.
+构建脚本通过打印到 stdout 与 Cargo 通信。Cargo 将把每一行以 `cargo::` 开头的行解释为将影响包编译的指令。所有其他行将被忽略。
 
-> The order of `cargo::` instructions printed by the build script *may*
-> affect the order of arguments that `cargo` passes to `rustc`. In turn, the
-> order of arguments passed to `rustc` may affect the order of arguments passed
-> to the linker. Therefore, you will want to pay attention to the order of the
-> build script's instructions. For example, if object `foo` needs to link against
-> library `bar`, you may want to make sure that library `bar`'s
-> [`cargo::rustc-link-lib`](#rustc-link-lib) instruction appears *after*
-> instructions to link object `foo`.
+> 构建脚本打印的 `cargo::` 指令的*顺序*可能会影响 `cargo` 传递给 `rustc` 的参数顺序。反过来，传递给 `rustc` 的参数顺序可能会影响传递给链接器的参数顺序。因此，你需要注意构建脚本指令的顺序。例如，如果对象 `foo` 需要链接到库 `bar`，你可能希望确保库 `bar` 的 [`cargo::rustc-link-lib`](#rustc-link-lib) 指令出现在链接对象 `foo` 的指令*之后*。
 
-The output of the script is hidden from the terminal during normal
-compilation. If you would like to see the output directly in your terminal,
-invoke Cargo as "very verbose" with the `-vv` flag. This only happens when the
-build script is run. If Cargo determines nothing has changed, it will not
-re-run the script, see [change detection](#change-detection) below for more.
+在正常编译期间，脚本的输出对终端是隐藏的。如果你希望直接在终端中看到输出，请使用 `-vv` 标志以“非常详细”的方式调用 Cargo。这仅在构建脚本运行时发生。如果 Cargo 确定没有任何变化，它将不会重新运行脚本，更多信息请参见下面的[变更检测](#change-detection)。
 
-All the lines printed to stdout by a build script are written to a file like
-`target/debug/build/<pkg>/output` (the precise location may depend on your
-configuration). The stderr output is also saved in that same directory.
+构建脚本打印到 stdout 的所有行都写入到类似 `target/debug/build/<pkg>/output` 的文件中（确切位置可能取决于你的配置）。stderr 输出也保存在同一目录中。
 
-The following is a summary of the instructions that Cargo recognizes, with each
-one detailed below.
+以下是 Cargo 识别的指令摘要，每个指令的详细信息如下。
 
-* [`cargo::rerun-if-changed=PATH`](#rerun-if-changed) --- Tells Cargo when to
-  re-run the script.
-* [`cargo::rerun-if-env-changed=VAR`](#rerun-if-env-changed) --- Tells Cargo when
-  to re-run the script.
-* [`cargo::rustc-link-arg=FLAG`](#rustc-link-arg) --- Passes custom flags to a
-  linker for benchmarks, binaries, `cdylib` crates, examples, and tests.
-* [`cargo::rustc-link-arg-cdylib=FLAG`](#rustc-cdylib-link-arg) --- Passes custom
-  flags to a linker for cdylib crates.
-* [`cargo::rustc-link-arg-bin=BIN=FLAG`](#rustc-link-arg-bin) --- Passes custom
-  flags to a linker for the binary `BIN`.
-* [`cargo::rustc-link-arg-bins=FLAG`](#rustc-link-arg-bins) --- Passes custom
-  flags to a linker for binaries.
-* [`cargo::rustc-link-arg-tests=FLAG`](#rustc-link-arg-tests) --- Passes custom
-  flags to a linker for tests.
-* [`cargo::rustc-link-arg-examples=FLAG`](#rustc-link-arg-examples) --- Passes custom
-  flags to a linker for examples.
-* [`cargo::rustc-link-arg-benches=FLAG`](#rustc-link-arg-benches) --- Passes custom
-  flags to a linker for benchmarks.
-* [`cargo::rustc-link-lib=LIB`](#rustc-link-lib) --- Adds a library to
-  link.
-* [`cargo::rustc-link-search=[KIND=]PATH`](#rustc-link-search) --- Adds to the
-  library search path.
-* [`cargo::rustc-flags=FLAGS`](#rustc-flags) --- Passes certain flags to the
-  compiler.
-* [`cargo::rustc-cfg=KEY[="VALUE"]`](#rustc-cfg) --- Enables compile-time `cfg`
-  settings.
-* [`cargo::rustc-check-cfg=CHECK_CFG`](#rustc-check-cfg) -- Register custom `cfg`s as
-  expected for compile-time checking of configs. 
-* [`cargo::rustc-env=VAR=VALUE`](#rustc-env) --- Sets an environment variable.
-- [`cargo::error=MESSAGE`](#cargo-error) --- Displays an error on the terminal.
-* [`cargo::warning=MESSAGE`](#cargo-warning) --- Displays a warning on the
-  terminal.
-* [`cargo::metadata=KEY=VALUE`](#the-links-manifest-key) --- Metadata, used by `links`
-  scripts.
+* [`cargo::rerun-if-changed=PATH`](#rerun-if-changed) --- 告诉 Cargo 何时重新运行脚本。
+* [`cargo::rerun-if-env-changed=VAR`](#rerun-if-env-changed) --- 告诉 Cargo 何时重新运行脚本。
+* [`cargo::rustc-link-arg=FLAG`](#rustc-link-arg) --- 为基准测试、二进制文件、`cdylib` crate、示例和测试向链接器传递自定义标志。
+* [`cargo::rustc-link-arg-cdylib=FLAG`](#rustc-cdylib-link-arg) --- 为 cdylib crate 向链接器传递自定义标志。
+* [`cargo::rustc-link-arg-bin=BIN=FLAG`](#rustc-link-arg-bin) --- 为二进制文件 `BIN` 向链接器传递自定义标志。
+* [`cargo::rustc-link-arg-bins=FLAG`](#rustc-link-arg-bins) --- 为二进制文件向链接器传递自定义标志。
+* [`cargo::rustc-link-arg-tests=FLAG`](#rustc-link-arg-tests) --- 为测试向链接器传递自定义标志。
+* [`cargo::rustc-link-arg-examples=FLAG`](#rustc-link-arg-examples) --- 为示例向链接器传递自定义标志。
+* [`cargo::rustc-link-arg-benches=FLAG`](#rustc-link-arg-benches) --- 为基准测试向链接器传递自定义标志。
+* [`cargo::rustc-link-lib=LIB`](#rustc-link-lib) --- 添加要链接的库。
+* [`cargo::rustc-link-search=[KIND=]PATH`](#rustc-link-search) --- 添加到库搜索路径。
+* [`cargo::rustc-flags=FLAGS`](#rustc-flags) --- 向编译器传递某些标志。
+* [`cargo::rustc-cfg=KEY[="VALUE"]`](#rustc-cfg) --- 启用编译时 `cfg` 设置。
+* [`cargo::rustc-check-cfg=CHECK_CFG`](#rustc-check-cfg) --- 注册自定义 `cfg` 作为预期的配置，用于编译时配置检查。
+* [`cargo::rustc-env=VAR=VALUE`](#rustc-env) --- 设置环境变量。
+* [`cargo::error=MESSAGE`](#cargo-error) --- 在终端上显示错误。
+* [`cargo::warning=MESSAGE`](#cargo-warning) --- 在终端上显示警告。
+* [`cargo::metadata=KEY=VALUE`](#the-links-manifest-key) --- 元数据，由 `links` 脚本使用。
 
-> **MSRV:** 1.77 is required for `cargo::KEY=VALUE` syntax.
-> To support older versions, use the `cargo:KEY=VALUE` syntax.
+> **MSRV：** 需要 1.77 版本才能使用 `cargo::KEY=VALUE` 语法。
+> 要支持旧版本，请使用 `cargo:KEY=VALUE` 语法。
 
 ### `cargo::rustc-link-arg=FLAG` {#rustc-link-arg}
 
-The `rustc-link-arg` instruction tells Cargo to pass the [`-C link-arg=FLAG`
-option][link-arg] to the compiler, but only when building supported targets
-(benchmarks, binaries, `cdylib` crates, examples, and tests). Its usage is
-highly platform specific. It is useful to set the shared library version or
-linker script.
+`rustc-link-arg` 指令告诉 Cargo 将 [`-C link-arg=FLAG` 选项][link-arg]传递给编译器，但仅在构建受支持的目标（基准测试、二进制文件、`cdylib` crate、示例和测试）时使用。它的使用高度依赖于平台。它对于设置共享库版本或链接器脚本很有用。
 
 [link-arg]: ../../rustc/codegen-options/index.md#link-arg
 
 ### `cargo::rustc-link-arg-cdylib=FLAG` {#rustc-cdylib-link-arg}
 
-The `rustc-link-arg-cdylib` instruction tells Cargo to pass the [`-C
-link-arg=FLAG` option][link-arg] to the compiler, but only when building a
-`cdylib` library target. Its usage is highly platform specific. It is useful
-to set the shared library version or the runtime-path.
+`rustc-link-arg-cdylib` 指令告诉 Cargo 将 [`-C link-arg=FLAG` 选项][link-arg]传递给编译器，但仅在构建 `cdylib` 库目标时使用。它的使用高度依赖于平台。它对于设置共享库版本或运行时路径很有用。
 
-For historical reasons, the `cargo::rustc-cdylib-link-arg` form is an alias
-for `cargo::rustc-link-arg-cdylib`, and has the same meaning.
+由于历史原因，`cargo::rustc-cdylib-link-arg` 形式是 `cargo::rustc-link-arg-cdylib` 的别名，并且具有相同的含义。
 
 ### `cargo::rustc-link-arg-bin=BIN=FLAG` {#rustc-link-arg-bin}
 
-The `rustc-link-arg-bin` instruction tells Cargo to pass the [`-C
-link-arg=FLAG` option][link-arg] to the compiler, but only when building
-the binary target with name `BIN`. Its usage is highly platform specific. It is useful
-to set a linker script or other linker options.
+`rustc-link-arg-bin` 指令告诉 Cargo 将 [`-C link-arg=FLAG` 选项][link-arg]传递给编译器，但仅在构建名为 `BIN` 的二进制目标时使用。它的使用高度依赖于平台。它对于设置链接器脚本或其他链接器选项很有用。
 
 ### `cargo::rustc-link-arg-bins=FLAG` {#rustc-link-arg-bins}
 
-The `rustc-link-arg-bins` instruction tells Cargo to pass the [`-C
-link-arg=FLAG` option][link-arg] to the compiler, but only when building a
-binary target. Its usage is highly platform specific. It is useful
-to set a linker script or other linker options.
+`rustc-link-arg-bins` 指令告诉 Cargo 将 [`-C link-arg=FLAG` 选项][link-arg]传递给编译器，但仅在构建二进制目标时使用。它的使用高度依赖于平台。它对于设置链接器脚本或其他链接器选项很有用。
 
 ### `cargo::rustc-link-arg-tests=FLAG` {#rustc-link-arg-tests}
 
-The `rustc-link-arg-tests` instruction tells Cargo to pass the [`-C
-link-arg=FLAG` option][link-arg] to the compiler, but only when building a
-tests target.
+`rustc-link-arg-tests` 指令告诉 Cargo 将 [`-C link-arg=FLAG` 选项][link-arg]传递给编译器，但仅在构建测试目标时使用。
 
 ### `cargo::rustc-link-arg-examples=FLAG` {#rustc-link-arg-examples}
 
-The `rustc-link-arg-examples` instruction tells Cargo to pass the [`-C
-link-arg=FLAG` option][link-arg] to the compiler, but only when building an examples
-target.
+`rustc-link-arg-examples` 指令告诉 Cargo 将 [`-C link-arg=FLAG` 选项][link-arg]传递给编译器，但仅在构建示例目标时使用。
 
 ### `cargo::rustc-link-arg-benches=FLAG` {#rustc-link-arg-benches}
 
-The `rustc-link-arg-benches` instruction tells Cargo to pass the [`-C
-link-arg=FLAG` option][link-arg] to the compiler, but only when building a benchmark
-target.
+`rustc-link-arg-benches` 指令告诉 Cargo 将 [`-C link-arg=FLAG` 选项][link-arg]传递给编译器，但仅在构建基准测试目标时使用。
 
 ### `cargo::rustc-link-lib=LIB` {#rustc-link-lib}
 
-The `rustc-link-lib` instruction tells Cargo to link the given library using
-the compiler's [`-l` flag][option-link]. This is typically used to link a
-native library using [FFI].
+`rustc-link-lib` 指令告诉 Cargo 使用编译器的 [`-l` 标志][option-link]链接给定的库。这通常用于通过 [FFI] 链接本机库。
 
-The `LIB` string is passed directly to rustc, so it supports any syntax that
-`-l` does. \
-Currently the fully supported syntax for `LIB` is `[KIND[:MODIFIERS]=]NAME[:RENAME]`.
+`LIB` 字符串直接传递给 rustc，因此它支持 `-l` 的任何语法。\
+目前 `LIB` 完全支持的语法是 `[KIND[:MODIFIERS]=]NAME[:RENAME]`。
 
-The `-l` flag is only passed to the library target of the package, unless
-there is no library target, in which case it is passed to all targets. This is
-done because all other targets have an implicit dependency on the library
-target, and the given library to link should only be included once. This means
-that if a package has both a library and a binary target, the *library* has
-access to the symbols from the given lib, and the binary should access them
-through the library target's public API.
+`-l` 标志仅传递给包的库目标，除非没有库目标，在这种情况下它将传递给所有目标。这样做是因为所有其他目标都隐式依赖于库目标，并且要链接的给定库应该只包含一次。这意味着，如果一个包同时具有库和二进制目标，则*库*可以访问给定库中的符号，而二进制文件应通过库目标的公共 API 访问它们。
 
-The optional `KIND` may be one of `dylib`, `static`, or `framework`. See the
-[rustc book][option-link] for more detail.
+可选的 `KIND` 可以是 `dylib`、`static` 或 `framework` 之一。更多详细信息请参阅 [rustc 手册][option-link]。
 
 [option-link]: ../../rustc/command-line-arguments.md#option-l-link-lib
 [FFI]: ../../nomicon/ffi.md
 
 ### `cargo::rustc-link-search=[KIND=]PATH` {#rustc-link-search}
 
-The `rustc-link-search` instruction tells Cargo to pass the [`-L`
-flag][option-search] to the compiler to add a directory to the library search
-path.
+`rustc-link-search` 指令告诉 Cargo 将 [`-L` 标志][option-search]传递给编译器，以将目录添加到库搜索路径。
 
-The optional `KIND` may be one of `dependency`, `crate`, `native`,
-`framework`, or `all`. See the [rustc book][option-search] for more detail.
+可选的 `KIND` 可以是 `dependency`、`crate`、`native`、`framework` 或 `all` 之一。更多详细信息请参阅 [rustc 手册][option-search]。
 
-These paths are also added to the [dynamic library search path environment
-variable](environment-variables.md#dynamic-library-paths) if they are within
-the `OUT_DIR`. Depending on this behavior is discouraged since this makes it
-difficult to use the resulting binary. In general, it is best to avoid
-creating dynamic libraries in a build script (using existing system libraries
-is fine).
+如果这些路径在 `OUT_DIR` 内，它们也会被添加到[动态库搜索路径环境变量](environment-variables.md#dynamic-library-paths)中。不建议依赖此行为，因为这使得使用生成的二进制文件变得困难。通常，最好避免在构建脚本中创建动态库（使用现有的系统库是可以的）。
 
 [option-search]: ../../rustc/command-line-arguments.md#option-l-search-path
 
 ### `cargo::rustc-flags=FLAGS` {#rustc-flags}
 
-The `rustc-flags` instruction tells Cargo to pass the given space-separated
-flags to the compiler. This only allows the `-l` and `-L` flags, and is
-equivalent to using [`rustc-link-lib`](#rustc-link-lib) and
-[`rustc-link-search`](#rustc-link-search).
+`rustc-flags` 指令告诉 Cargo 将给定的空格分隔的标志传递给编译器。这只允许 `-l` 和 `-L` 标志，相当于使用 [`rustc-link-lib`](#rustc-link-lib) 和 [`rustc-link-search`](#rustc-link-search)。
 
 ### `cargo::rustc-cfg=KEY[="VALUE"]` {#rustc-cfg}
 
-The `rustc-cfg` instruction tells Cargo to pass the given value to the
-[`--cfg` flag][option-cfg] to the compiler. This may be used for compile-time
-detection of features to enable [conditional compilation]. Custom cfgs
-must either be expected using the [`cargo::rustc-check-cfg`](#rustc-check-cfg)
-instruction or usage will need to allow the [`unexpected_cfgs`][unexpected-cfgs]
-lint to avoid unexpected cfgs warnings.
+`rustc-cfg` 指令告诉 Cargo 将给定值传递给编译器的 [`--cfg` 标志][option-cfg]。这可以用于在编译时检测特性以启用[条件编译]。自定义 cfg 必须使用 [`cargo::rustc-check-cfg`](#rustc-check-cfg) 指令进行预期，否则使用将需要允许 [`unexpected_cfgs`][unexpected-cfgs] lint 以避免意外的 cfg 警告。
 
-Note that this does *not* affect Cargo's dependency resolution. This cannot be
-used to enable an optional dependency, or enable other Cargo features.
+请注意，这*不会*影响 Cargo 的依赖项解析。这不能用于启用可选依赖项或启用其他 Cargo 特性。
 
-Be aware that [Cargo features] use the form `feature="foo"`. `cfg` values
-passed with this flag are not restricted to that form, and may provide just a
-single identifier, or any arbitrary key/value pair. For example, emitting
-`cargo::rustc-cfg=abc` will then allow code to use `#[cfg(abc)]` (note the lack
-of `feature=`). Or an arbitrary key/value pair may be used with an `=` symbol
-like `cargo::rustc-cfg=my_component="foo"`. The key should be a Rust
-identifier, the value should be a string.
+请注意，[Cargo 特性]使用 `feature="foo"` 形式。使用此标志传递的 `cfg` 值不限于该形式，可以提供单个标识符或任何任意的键/值对。例如，发出 `cargo::rustc-cfg=abc` 将允许代码使用 `#[cfg(abc)]`（注意缺少 `feature=`）。或者，可以使用 `=` 符号的任意键/值对，如 `cargo::rustc-cfg=my_component="foo"`。键应为 Rust 标识符，值应为字符串。
 
-[cargo features]: features.md
-[conditional compilation]: ../../reference/conditional-compilation.md
+[Cargo 特性]: features.md
+[条件编译]: ../../reference/conditional-compilation.md
 [option-cfg]: ../../rustc/command-line-arguments.md#option-cfg
 [unexpected-cfgs]: ../../rustc/lints/listing/warn-by-default.md#unexpected-cfgs
 
 ### `cargo::rustc-check-cfg=CHECK_CFG` {#rustc-check-cfg}
 
-Add to the list of expected config names and values that is used when checking
-the _reachable_ cfg expressions with the [`unexpected_cfgs`][unexpected-cfgs] lint.
+添加到预期的配置名称和值列表中，该列表用于检查*可到达的* cfg 表达式时使用 [`unexpected_cfgs`][unexpected-cfgs] lint。
 
-The syntax of `CHECK_CFG` mirrors the `rustc` [`--check-cfg` flag][option-check-cfg], see
-[Checking conditional configurations][checking-conditional-configurations] for more details.
+`CHECK_CFG` 的语法镜像了 `rustc` 的 [`--check-cfg` 标志][option-check-cfg]，更多详细信息请参阅[检查条件配置][checking-conditional-configurations]。
 
-The instruction can be used like this:
+该指令可以这样使用：
 
 ```rust,no_run
 // build.rs
@@ -281,17 +170,13 @@ if foo_bar_condition {
 }
 ```
 
-Note that all possible cfgs should be defined, regardless of which cfgs are
-currently enabled. This includes all possible values of a given cfg name.
+请注意，应定义所有可能的 cfg，无论当前启用了哪些 cfg。这包括给定 cfg 名称的所有可能值。
 
-It is recommended to group the `cargo::rustc-check-cfg` and
-[`cargo::rustc-cfg`][option-cfg] instructions as closely as possible in order to
-avoid typos, missing check-cfg, stale cfgs...
+建议将 `cargo::rustc-check-cfg` 和 [`cargo::rustc-cfg`][option-cfg] 指令尽可能紧密地分组，以避免拼写错误、缺少 check-cfg、过时的 cfg...
 
-See also the
-[conditional compilation][conditional-compilation-example] example.
+另请参阅[条件编译][conditional-compilation-example]示例。
 
-> **MSRV:** Respected as of 1.80
+> **MSRV：** 从 1.80 版本开始被尊重
 
 [checking-conditional-configurations]: ../../rustc/check-cfg.html
 [option-check-cfg]: ../../rustc/command-line-arguments.md#option-check-cfg
@@ -299,127 +184,67 @@ See also the
 
 ### `cargo::rustc-env=VAR=VALUE` {#rustc-env}
 
-The `rustc-env` instruction tells Cargo to set the given environment variable
-when compiling the package. The value can be then retrieved by the [`env!`
-macro][env-macro] in the compiled crate. This is useful for embedding
-additional metadata in crate's code, such as the hash of git HEAD or the
-unique identifier of a continuous integration server.
+`rustc-env` 指令告诉 Cargo 在编译包时设置给定的环境变量。然后，编译后的 crate 中的 [`env!` 宏][env-macro]可以检索该值。这对于在 crate 的代码中嵌入额外的元数据很有用，例如 git HEAD 的哈希值或持续集成服务器的唯一标识符。
 
-See also the [environment variables automatically included by
-Cargo][env-cargo].
+另请参阅[Cargo 自动包含的环境变量][env-cargo]。
 
-> **Note**: These environment variables are also set when running an
-> executable with `cargo run` or `cargo test`. However, this usage is
-> discouraged since it ties the executable to Cargo's execution environment.
-> Normally, these environment variables should only be checked at compile-time
-> with the `env!` macro.
+> **注意**：这些环境变量在运行可执行文件时也会设置，使用 `cargo run` 或 `cargo test`。但是，不鼓励这种用法，因为它将可执行文件与 Cargo 的执行环境绑定。通常，这些环境变量应仅在编译时使用 `env!` 宏检查。
 
 [env-macro]: ../../std/macro.env.html
 [env-cargo]: environment-variables.md#environment-variables-cargo-sets-for-crates
 
 ### `cargo::error=MESSAGE` {#cargo-error}
 
-The `error` instruction tells Cargo to display an error after the build script
-has finished running, and then fail the build.
+`error` 指令告诉 Cargo 在构建脚本运行完毕后显示错误，然后使构建失败。
 
- > Note: Build script libraries should carefully consider if they want to
- > use `cargo::error` versus returning a `Result`. It may be better to return
- > a `Result`, and allow the caller to decide if the error is fatal or not.
- > The caller can then decide whether or not to display the `Err` variant
- > using `cargo::error`.
+> 注意：构建脚本库应仔细考虑是否要使用 `cargo::error` 与返回 `Result`。最好返回 `Result`，并允许调用者决定错误是否致命。然后调用者可以决定是否使用 `cargo::error` 显示 `Err` 变体。
 
-> **MSRV:** Respected as of 1.84
+> **MSRV：** 从 1.84 版本开始被尊重
 
 ### `cargo::warning=MESSAGE` {#cargo-warning}
 
-The `warning` instruction tells Cargo to display a warning after the build
-script has finished running. Warnings are only shown for `path` dependencies
-(that is, those you're working on locally), so for example warnings printed
-out in [crates.io] crates are not emitted by default, unless the build fails.
-The `-vv` "very verbose" flag may be used to have Cargo display warnings for
-all crates.
+`warning` 指令告诉 Cargo 在构建脚本运行完毕后显示警告。警告仅针对 `path` 依赖项（即你在本地工作的那些）显示，因此例如，默认情况下不会发出 [crates.io] crate 中打印的警告，除非构建失败。可以使用 `-vv` “非常详细”标志让 Cargo 显示所有 crate 的警告。
 
-## Build Dependencies
+## 构建依赖项 {#build-dependencies}
 
-Build scripts are also allowed to have dependencies on other Cargo-based crates.
-Dependencies are declared through the `build-dependencies` section of the
-manifest.
+构建脚本也可以依赖于其他基于 Cargo 的 crate。依赖项通过清单的 `build-dependencies` 部分声明。
 
 ```toml
 [build-dependencies]
 cc = "1.0.46"
 ```
 
-The build script **does not** have access to the dependencies listed in the
-`dependencies` or `dev-dependencies` section (they’re not built yet!). Also,
-build dependencies are not available to the package itself unless also
-explicitly added in the `[dependencies]` table.
+构建脚本**不能**访问列在 `dependencies` 或 `dev-dependencies` 部分中的依赖项（它们尚未构建！）。此外，构建依赖项对包本身不可用，除非也显式添加到 `[dependencies]` 表中。
 
-It is recommended to carefully consider each dependency you add, weighing
-against the impact on compile time, licensing, maintenance, etc. Cargo will
-attempt to reuse a dependency if it is shared between build dependencies and
-normal dependencies. However, this is not always possible, for example when
-cross-compiling, so keep that in consideration of the impact on compile time.
+建议仔细考虑添加的每个依赖项，权衡对编译时间、许可、维护等的影响。Cargo 将尝试重用构建依赖项和普通依赖项之间共享的依赖项。然而，这并不总是可能的，例如在交叉编译时，因此请考虑对编译时间的影响。
 
-## Change Detection
+## 变更检测 {#change-detection}
 
-When rebuilding a package, Cargo does not necessarily know if the build script
-needs to be run again. By default, it takes a conservative approach of always
-re-running the build script if any file within the package is changed (or the
-list of files controlled by the [`exclude` and `include` fields]). For most
-cases, this is not a good choice, so it is recommended that every build script
-emit at least one of the `rerun-if` instructions (described below). If these
-are emitted, then Cargo will only re-run the script if the given value has
-changed. If Cargo is re-running the build scripts of your own crate or a
-dependency and you don't know why, see ["Why is Cargo rebuilding my code?" in the
-FAQ](../faq.md#why-is-cargo-rebuilding-my-code).
+当重新构建包时，Cargo 不一定知道是否需要再次运行构建脚本。默认情况下，它采取保守的方法，即如果包中的任何文件发生更改（或由 [`exclude` 和 `include` 字段]控制的文件列表），则始终重新运行构建脚本。对于大多数情况，这不是一个好的选择，因此建议每个构建脚本至少发出一个 `rerun-if` 指令（如下所述）。如果发出这些指令，则 Cargo 仅在给定值发生更改时才会重新运行脚本。如果 Cargo 正在重新运行你自己的 crate 或依赖项的构建脚本，而你不知道为什么，请参阅 FAQ 中的["为什么 Cargo 在重新构建我的代码？"](../faq.md#why-is-cargo-rebuilding-my-code)。
 
-[`exclude` and `include` fields]: manifest.md#the-exclude-and-include-fields
+[`exclude` 和 `include` 字段]: manifest.md#the-exclude-and-include-fields
 
 ### `cargo::rerun-if-changed=PATH` {#rerun-if-changed}
 
-The `rerun-if-changed` instruction tells Cargo to re-run the build script if
-the file at the given path has changed. Currently, Cargo only uses the
-filesystem last-modified "mtime" timestamp to determine if the file has
-changed. It compares against an internal cached timestamp of when the build
-script last ran.
+`rerun-if-changed` 指令告诉 Cargo，如果给定路径的文件发生更改，则重新运行脚本。目前，Cargo 仅使用文件系统最后修改的 "mtime" 时间戳来确定文件是否已更改。它会与构建脚本上次运行时的内部缓存时间戳进行比较。
 
-If the path points to a directory, it will scan the entire directory for
-any modifications.
+如果路径指向一个目录，它将扫描整个目录以查找任何修改。
 
-If the build script inherently does not need to re-run under any circumstance,
-then emitting `cargo::rerun-if-changed=build.rs` is a simple way to prevent it
-from being re-run (otherwise, the default if no `rerun-if` instructions are
-emitted is to scan the entire package directory for changes). Cargo
-automatically handles whether or not the script itself needs to be recompiled,
-and of course the script will be re-run after it has been recompiled.
-Otherwise, specifying `build.rs` is redundant and unnecessary.
+如果构建脚本在任何情况下都不需要重新运行，那么发出 `cargo::rerun-if-changed=build.rs` 是防止其重新运行的一种简单方法（否则，如果没有发出 `rerun-if` 指令，默认是扫描整个包目录以查找更改）。Cargo 会自动处理脚本本身是否需要重新编译，当然，脚本在重新编译后将被重新运行。否则，指定 `build.rs` 是冗余且不必要的。
 
 ### `cargo::rerun-if-env-changed=NAME` {#rerun-if-env-changed}
 
-The `rerun-if-env-changed` instruction tells Cargo to re-run the build script
-if the value of an environment variable of the given name has changed.
+`rerun-if-env-changed` 指令告诉 Cargo，如果给定名称的环境变量的值发生更改，则重新运行构建脚本。
 
-Note that the environment variables here are intended for global environment
-variables like `CC` and such, it is not possible to use this for environment
-variables like `TARGET` that [Cargo sets for build scripts][build-env]. The
-environment variables in use are those received by `cargo` invocations, not
-those received by the executable of the build script.
+请注意，这里的环境变量旨在用于全局环境变量，如 `CC` 等，不能用于像 `TARGET` 这样的环境变量，这些变量是[Cargo 为构建脚本设置的][build-env]。使用的环境变量是 `cargo` 调用接收到的环境变量，而不是构建脚本可执行文件接收到的环境变量。
 
-As of 1.46, using [`env!`][env-macro] and [`option_env!`][option-env-macro] in
-source code will automatically detect changes and trigger rebuilds.
-`rerun-if-env-changed` is no longer needed for variables already referenced by
-these macros.
+从 1.46 版本开始，在源代码中使用 [`env!`][env-macro] 和 [`option_env!`][option-env-macro] 将自动检测更改并触发重新构建。对于这些宏已经引用的变量，不再需要 `rerun-if-env-changed`。
 
 [option-env-macro]: ../../std/macro.option_env.html
 
-## The `links` Manifest Key
+## `links` 清单键 {#the-links-manifest-key}
 
-The `package.links` key may be set in the `Cargo.toml` manifest to declare
-that the package links with the given native library. The purpose of this
-manifest key is to give Cargo an understanding about the set of native
-dependencies that a package has, as well as providing a principled system of
-passing metadata between package build scripts.
+可以在 `Cargo.toml` 清单中设置 `package.links` 键，以声明包链接到给定的本机库。此清单键的目的是让 Cargo 了解包具有的本机依赖项集，并提供在包构建脚本之间传递元数据的原则性系统。
 
 ```toml
 [package]
@@ -427,77 +252,45 @@ passing metadata between package build scripts.
 links = "foo"
 ```
 
-This manifest states that the package links to the `libfoo` native library.
-When using the `links` key, the package must have a build script, and the
-build script should use the [`rustc-link-lib` instruction](#rustc-link-lib) to
-link the library.
+此清单声明包链接到 `libfoo` 本机库。使用 `links` 键时，包必须具有构建脚本，并且构建脚本应使用 [`rustc-link-lib` 指令](#rustc-link-lib)来链接库。
 
-Primarily, Cargo requires that there is at most one package per `links` value.
-In other words, it is forbidden to have two packages link to the same native
-library. This helps prevent duplicate symbols between crates. Note, however,
-that there are [conventions in place](#-sys-packages) to alleviate this.
+首先，Cargo 要求每个 `links` 值最多有一个包。换句话说，禁止有两个包链接到同一个本机库。这有助于防止 crate 之间的重复符号。但是，请注意，有一些[约定](#-sys-packages)可以缓解这种情况。
 
-Build scripts can generate an arbitrary set of metadata in the form of
-key-value pairs. This metadata is set with the `cargo::metadata=KEY=VALUE`
-instruction.
+构建脚本可以生成任意键值对形式的元数据集。此元数据使用 `cargo::metadata=KEY=VALUE` 指令设置。
 
-The metadata is passed to the build scripts of **dependent** packages. For
-example, if the package `foo` depends on `bar`, which links `baz`, then if 
-`bar` generates `key=value` as part of its build script metadata, then the
-build script of `foo` will have the environment variables `DEP_BAZ_KEY=value`
-(note that the value of the `links` key is used and the case change for `key`).
-See the ["Using another `sys` crate"][using-another-sys] for an example of 
-how this can be used.
+元数据传递给**依赖**包的构建脚本。例如，如果包 `foo` 依赖于 `bar`，而 `bar` 链接到 `baz`，那么如果 `bar` 生成 `key=value` 作为其构建脚本元数据的一部分，则 `foo` 的构建脚本将具有环境变量 `DEP_BAZ_KEY=value`（注意 `links` 键的值被使用，并且 `key` 的大小写发生变化）。请参阅["使用另一个 `sys` crate"][using-another-sys]以了解如何使用此功能的示例。
 
-Note that metadata is only passed to immediate dependents, not transitive
-dependents.
+请注意，元数据仅传递给直接依赖项，而不是传递依赖项。
 
-> **MSRV:** 1.77 is required for `cargo::metadata=KEY=VALUE`.
-> To support older versions, use `cargo:KEY=VALUE` (unsupported directives are assumed to be metadata keys).
+> **MSRV：** 需要 1.77 版本才能使用 `cargo::metadata=KEY=VALUE`。
+> 要支持旧版本，请使用 `cargo:KEY=VALUE`（不受支持的指令被假定为元数据键）。
 
 [using-another-sys]: build-script-examples.md#using-another-sys-crate
 
-## `*-sys` Packages
+## `*-sys` 包 {#-sys-packages}
 
-Some Cargo packages that link to system libraries have a naming convention of
-having a `-sys` suffix. Any package named `foo-sys` should provide two major
-pieces of functionality:
+一些链接到系统库的 Cargo 包有一个命名约定，即带有 `-sys` 后缀。任何名为 `foo-sys` 的包应提供两个主要功能：
 
-* The library crate should link to the native library `libfoo`. This will often
-  probe the current system for `libfoo` before resorting to building from
-  source.
-* The library crate should provide **declarations** for types and functions in
-  `libfoo`, but **not** higher-level abstractions.
+* 库 crate 应链接到本机库 `libfoo`。这通常会在从源代码构建之前探测当前系统以查找 `libfoo`。
+* 库 crate 应提供 `libfoo` 中的类型和函数的**声明**，但**不**提供更高级别的抽象。
 
-The set of `*-sys` packages provides a common set of dependencies for linking
-to native libraries. There are a number of benefits earned from having this
-convention of native-library-related packages:
+`*-sys` 包集提供了一组用于链接到本机库的公共依赖项。从这种本机库相关包的约定中获得了一些好处：
 
-* Common dependencies on `foo-sys` alleviates the rule about one package per
-  value of `links`.
-* Other `-sys` packages can take advantage of the `DEP_LINKS_KEY=value`
-  environment variables to better integrate with other packages. See the
-  ["Using another `sys` crate"][using-another-sys] example.
-* A common dependency allows centralizing logic on discovering `libfoo` itself
-  (or building it from source).
-* These dependencies are easily [overridable](#overriding-build-scripts).
+* 对 `foo-sys` 的公共依赖项缓解了每个 `links` 值一个包的规则。
+* 其他 `-sys` 包可以利用 `DEP_LINKS_KEY=value` 环境变量更好地与其他包集成。请参阅["使用另一个 `sys` crate"][using-another-sys]示例。
+* 公共依赖项允许集中发现 `libfoo` 本身（或从源代码构建）的逻辑。
+* 这些依赖项很容易[被覆盖](#overriding-build-scripts)。
 
-It is common to have a companion package without the `-sys` suffix that
-provides a safe, high-level abstractions on top of the sys package. For
-example, the [`git2` crate] provides a high-level interface to the
-[`libgit2-sys` crate].
+通常有一个没有 `-sys` 后缀的配套包，它在 sys 包之上提供安全、高级别的抽象。例如，[`git2` crate] 提供了对 [`libgit2-sys` crate] 的高级接口。
 
 [`git2` crate]: https://crates.io/crates/git2
 [`libgit2-sys` crate]: https://crates.io/crates/libgit2-sys
 
-## Overriding Build Scripts
+## 覆盖构建脚本 {#overriding-build-scripts}
 
-If a manifest contains a `links` key, then Cargo supports overriding the build
-script specified with a custom library. The purpose of this functionality is to
-prevent running the build script in question altogether and instead supply the
-metadata ahead of time.
+如果清单包含 `links` 键，则 Cargo 支持使用自定义库覆盖指定的构建脚本。此功能的目的是完全防止运行所讨论的构建脚本，而是提前提供元数据。
 
-To override a build script, place the following configuration in any acceptable [`config.toml`](config.md) file.
+要覆盖构建脚本，请在任何可接受的 [`config.toml`](config.md) 文件中放置以下配置。
 
 ```toml
 [target.x86_64-unknown-linux-gnu.foo]
@@ -511,27 +304,17 @@ metadata_key1 = "value"
 metadata_key2 = "value"
 ```
 
-With this configuration, if a package declares that it links to `foo` then the
-build script will **not** be compiled or run, and the metadata specified will
-be used instead.
+使用此配置，如果包声明它链接到 `foo`，则构建脚本将**不会**被编译或运行，而是使用指定的元数据。
 
-The `warning`, `rerun-if-changed`, and `rerun-if-env-changed` keys should not
-be used and will be ignored.
+不应使用 `warning`、`rerun-if-changed` 和 `rerun-if-env-changed` 键，它们将被忽略。
 
-## Jobserver
+## Jobserver {#jobserver}
 
-Cargo and `rustc` use the [jobserver protocol], developed for GNU make, to
-coordinate concurrency across processes. It is essentially a semaphore that
-controls the number of jobs running concurrently. The concurrency may be set
-with the `--jobs` flag, which defaults to the number of logical CPUs.
+Cargo 和 `rustc` 使用为 GNU make 开发的 [jobserver 协议][jobserver protocol]来协调进程间的并发性。它本质上是一个控制并发运行作业数量的信号量。并发性可以使用 `--jobs` 标志设置，默认为逻辑 CPU 的数量。
 
-Each build script inherits one job slot from Cargo, and should endeavor to
-only use one CPU while it runs. If the script wants to use more CPUs in
-parallel, it should use the [`jobserver` crate] to coordinate with Cargo.
+每个构建脚本从 Cargo 继承一个作业槽，并且应努力在运行时仅使用一个 CPU。如果脚本想要并行使用更多 CPU，它应使用 [`jobserver` crate] 与 Cargo 协调。
 
-As an example, the [`cc` crate] may enable the optional `parallel` feature
-which will use the jobserver protocol to attempt to build multiple C files
-at the same time.
+例如，[`cc` crate] 可以启用可选的 `parallel` 特性，该特性将使用 jobserver 协议尝试同时构建多个 C 文件。
 
 [`cc` crate]: https://crates.io/crates/cc
 [`jobserver` crate]: https://crates.io/crates/jobserver
