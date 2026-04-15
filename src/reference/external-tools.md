@@ -1,77 +1,52 @@
-# External tools
+# 外部工具 {#external-tools}
 
-One of the goals of Cargo is simple integration with third-party tools, like
-IDEs and other build systems. To make integration easier, Cargo has several
-facilities:
+Cargo 的目标之一是简化与第三方工具（如 IDE 和其他构建系统）的集成。为了便于集成，Cargo 提供了以下几种机制：
 
-* a [`cargo metadata`] command, which outputs package structure and dependencies
-  information in JSON,
+* [`cargo metadata`] 命令，以 JSON 格式输出包结构和依赖信息，
+* `--message-format` 标志，输出特定构建的相关信息，以及
+* 对自定义子命令的支持。
 
-* a `--message-format` flag, which outputs information about a particular build,
-  and
+## 包结构信息 {#information-about-package-structure}
 
-* support for custom subcommands.
+你可以使用 [`cargo metadata`] 命令来获取包结构和依赖信息。有关输出格式的详细信息，请参阅 [`cargo metadata`] 文档。
 
+该格式是稳定且版本化的。在调用 `cargo metadata` 时，你应该显式传递 `--format-version` 标志，以避免向前兼容性风险。
 
-## Information about package structure
-
-You can use [`cargo metadata`] command to get information about package
-structure and dependencies. See the [`cargo metadata`] documentation
-for details on the format of the output.
-
-The format is stable and versioned. When calling `cargo metadata`, you should
-pass `--format-version` flag explicitly to avoid forward incompatibility
-hazard.
-
-If you are using Rust, the [cargo_metadata] crate can be used to parse the
-output.
+如果你使用 Rust，可以使用 [cargo_metadata] crate 来解析输出。
 
 [cargo_metadata]: https://crates.io/crates/cargo_metadata
 [`cargo metadata`]: ../commands/cargo-metadata.md
 
-## JSON messages
+## JSON 消息 {#json-messages}
 
-When passing `--message-format=json`, Cargo will output the following
-information during the build:
+当传递 `--message-format=json` 时，Cargo 将在构建过程中输出以下信息：
 
-* compiler errors and warnings,
+* 编译器错误和警告，
+* 生成的制品，
+* 构建脚本的结果（例如，原生依赖）。
 
-* produced artifacts,
+输出以每行一个 JSON 对象的形式写入 stdout。`reason` 字段用于区分不同类型的消息。
+`package_id` 字段是用于引用包的唯一标识符，也可作为许多命令的 `--package` 参数。语法规则可在 [Package ID Specifications] 章节中找到。
 
-* results of the build scripts (for example, native dependencies).
+> **注意：** `--message-format=json` 仅控制 Cargo 和 Rustc 的输出。
+> 这无法控制其他工具的输出，
+> 例如 `cargo run --message-format=json`，
+> 或过程宏的任意输出。
+> 在这些情况下，一种可能的解决方法是仅当一行以 `{` 开头时才将其解释为 JSON。
 
-The output goes to stdout in the JSON object per line format. The `reason` field
-distinguishes different kinds of messages.
-The `package_id` field is a unique identifier for referring to the package, and
-as the `--package` argument to many commands. The syntax grammar can be found in
-chapter [Package ID Specifications].
+`--message-format` 选项还可以接受额外的格式化值，这些值会改变 JSON 消息的计算和渲染方式。有关更多详细信息，请参阅 [build command documentation] 中 `--message-format` 选项的描述。
 
-> **Note:** `--message-format=json` only controls Cargo and Rustc's output.
-> This cannot control the output of other tools,
-> e.g. `cargo run --message-format=json`,
-> or arbitrary output from procedural macros.
-> A possible workaround in these situations is to only interpret a line as JSON if it starts with `{`.
+如果你使用 Rust，可以使用 [cargo_metadata] crate 来解析这些消息。
 
-The `--message-format` option can also take additional formatting values which
-alter the way the JSON messages are computed and rendered. See the description
-of the `--message-format` option in the [build command documentation] for more
-details.
-
-If you are using Rust, the [cargo_metadata] crate can be used to parse these
-messages.
-
-> **MSRV:** 1.77 is required for `package_id` to be a Package ID Specification. Before that, it was opaque.
+> **MSRV：** 1.77 版本要求 `package_id` 为 Package ID Specification。在此之前，它是不透明的。
 
 [build command documentation]: ../commands/cargo-build.md
 [cargo_metadata]: https://crates.io/crates/cargo_metadata
 [Package ID Specifications]: ./pkgid-spec.md
 
-### Compiler messages
+### 编译器消息 {#compiler-messages}
 
-The "compiler-message" message includes output from the compiler, such as
-warnings and errors. See the [rustc JSON chapter](../../rustc/json.md) for
-details on `rustc`'s message format, which is embedded in the following
-structure:
+"compiler-message" 消息包含来自编译器的输出，例如警告和错误。有关 `rustc` 消息格式的详细信息（该格式嵌入在以下结构中），请参阅 [rustc JSON 章节](../../rustc/json.md)：
 
 ```javascript
 {
@@ -139,21 +114,20 @@ structure:
 }
 ```
 
-### Artifact messages
+### Artifact 消息 {#artifact-messages}
 
-For every compilation step, a "compiler-artifact" message is emitted with the
-following structure:
+对于每个编译步骤，都会发出一个 "compiler-artifact" 消息，其结构如下：
 
 ```javascript
 {
-    /* The "reason" indicates the kind of message. */
+    /* "reason" 字段指示消息类型。 */
     "reason": "compiler-artifact",
-    /* The Package ID, a unique identifier for referring to the package. */
+    /* Package ID，用于引用包的唯一标识符。 */
     "package_id": "file:///path/to/my-package#0.1.0",
-    /* Absolute path to the package manifest. */
+    /* 包清单的绝对路径。 */
     "manifest_path": "/path/to/my-package/Cargo.toml",
-    /* The Cargo target (lib, bin, example, etc.) that generated the artifacts.
-       See the definition above for `compiler-message` for details.
+    /* 生成 Artifact 的 Cargo 目标（lib、bin、example 等）。
+       有关详细信息，请参阅上面 `compiler-message` 中的定义。
     */
     "target": {
         "kind": [
@@ -169,20 +143,20 @@ following structure:
         "doctest": true,
         "test": true
     },
-    /* The profile indicates which compiler settings were used. */
+    /* profile 指示使用了哪些编译器设置。 */
     "profile": {
-        /* The optimization level. */
+        /* 优化级别。 */
         "opt_level": "0",
-        /* The debug level, an integer of 0, 1, or 2, or a string
-           "line-directives-only" or "line-tables-only". If `null`, it implies
-           rustc's default of 0.
+        /* 调试级别，整数 0、1 或 2，或字符串
+           "line-directives-only" 或 "line-tables-only"。如果为 `null`，则暗示
+           rustc 的默认值 0。
         */
         "debuginfo": 2,
-        /* Whether or not debug assertions are enabled. */
+        /* 是否启用了调试断言。 */
         "debug_assertions": true,
-        /* Whether or not overflow checks are enabled. */
+        /* 是否启用了溢出检查。 */
         "overflow_checks": true,
-        /* Whether or not the `--test` flag is used. */
+        /* 是否使用了 `--test` 标志。 */
         "test": false
     },
     /* Array of features enabled. */
@@ -192,8 +166,8 @@ following structure:
         "/path/to/my-package/target/debug/libmy_package.rlib",
         "/path/to/my-package/target/debug/deps/libmy_package-be9f3faac0a26ef0.rmeta"
     ],
-    /* A string of the path to the executable that was created, or null if
-       this step did not generate an executable.
+    /* 所创建可执行文件的路径字符串，如果
+       此步骤未生成可执行文件，则为 null。
     */
     "executable": null,
     /* Whether or not this step was actually executed.
@@ -206,12 +180,9 @@ following structure:
 
 ```
 
-### Build script output
+### 构建脚本输出 {#build-script-output}
 
-The "build-script-executed" message includes the parsed output of a build
-script. Note that this is emitted even if the build script is not run; it will
-display the previously cached value. More details about build script output
-may be found in [the chapter on build scripts](build-scripts.md).
+"build-script-executed" 消息包含构建脚本的解析输出。请注意，即使构建脚本未运行，也会发出此消息；它将显示先前缓存的值。有关构建脚本输出的更多详细信息，请参阅 [构建脚本章节](build-scripts.md)。
 
 ```javascript
 {
@@ -247,9 +218,9 @@ may be found in [the chapter on build scripts](build-scripts.md).
 }
 ```
 
-### Build finished
+### 构建完成 {#build-finished}
 
-The "build-finished" message is emitted at the end of the build.
+"build-finished" 消息在构建结束时发出。
 
 ```javascript
 {
@@ -258,52 +229,29 @@ The "build-finished" message is emitted at the end of the build.
     /* Whether or not the build finished successfully. */
     "success": true,
 }
-````
+```
 
-This message can be helpful for tools to know when to stop reading JSON
-messages. Commands such as `cargo test` or `cargo run` can produce additional
-output after the build has finished. This message lets a tool know that Cargo
-will not produce additional JSON messages, but there may be additional output
-that may be generated afterwards (such as the output generated by the program
-executed by `cargo run`).
+此消息有助于工具知道何时停止读取 JSON 消息。诸如 `cargo test` 或 `cargo run` 等命令可能会在构建完成后产生额外的输出。此消息让工具知道 Cargo 不会产生额外的 JSON 消息，但之后可能会产生其他输出（例如由 `cargo run` 执行的程序生成的输出）。
 
-> Note: There is experimental nightly-only support for JSON output for tests,
-> so additional test-specific JSON messages may begin arriving after the
-> "build-finished" message if that is enabled.
+> 注意：目前对测试的 JSON 输出支持处于实验性阶段（仅限 nightly），
+> 因此，如果启用该功能，可能会在 "build-finished" 消息之后开始收到额外的测试特定 JSON 消息。
 
-## Custom subcommands
+## 自定义子命令 {#custom-subcommands}
 
-Cargo is designed to be extensible with new subcommands without having to modify
-Cargo itself. This is achieved by translating a cargo invocation of the form
-cargo `(?<command>[^ ]+)` into an invocation of an external tool
-`cargo-${command}`. The external tool must be present in one of the user's
-`$PATH` directories.
+Cargo 设计为无需修改 Cargo 本身即可通过新的子命令进行扩展。这是通过将 `cargo (?<command>[^ ]+)` 形式的调用转换为外部工具 `cargo-${command}` 的调用来实现的。外部工具必须位于用户的 `$PATH` 目录之一中。
 
-> **Note**: Cargo defaults to prioritizing external tools in `$CARGO_HOME/bin`
-> over `$PATH`. Users can override this precedence by adding `$CARGO_HOME/bin`
-> to `$PATH`.
+> **注意：** Cargo 默认优先使用 `$CARGO_HOME/bin` 中的外部工具，而非 `$PATH`。用户可以通过将 `$CARGO_HOME/bin` 添加到 `$PATH` 来覆盖此优先级。
 
-When Cargo invokes a custom subcommand, the first argument to the subcommand
-will be the filename of the custom subcommand, as usual. The second argument
-will be the subcommand name itself. For example, the second argument would be
-`${command}` when invoking `cargo-${command}`. Any additional arguments on the
-command line will be forwarded unchanged.
+当 Cargo 调用自定义子命令时，子命令的第一个参数将是自定义子命令的文件名，这是通常的做法。第二个参数将是子命令名称本身。例如，当调用 `cargo-${command}` 时，第二个参数将是 `${command}`。命令行上的任何其他参数将原样转发。
 
-Cargo can also display the help output of a custom subcommand with `cargo help
-${command}`. Cargo assumes that the subcommand will print a help message if its
-third argument is `--help`. So, `cargo help ${command}` would invoke
-`cargo-${command} ${command} --help`.
+Cargo 还可以通过 `cargo help ${command}` 显示自定义子命令的帮助输出。Cargo 假设子命令的第三个参数是 `--help` 时会打印帮助消息。因此，`cargo help ${command}` 将调用 `cargo-${command} ${command} --help`。
 
-Custom subcommands may use the `CARGO` environment variable to call back to
-Cargo. Alternatively, it can link to `cargo` crate as a library, but this
-approach has drawbacks:
+自定义子命令可以使用 `CARGO` 环境变量回调 Cargo。或者，它可以将 `cargo` crate 作为库链接，但这种方法有缺点：
 
-* Cargo as a library is unstable: the  API may change without deprecation
-* versions of the linked Cargo library may be different from the Cargo binary
+* Cargo 作为库是不稳定的：API 可能会在没有弃用的情况下更改
+* 链接的 Cargo 库版本可能与 Cargo 二进制文件不同
 
-Instead, it is encouraged to use the CLI interface to drive Cargo. The [`cargo
-metadata`] command can be used to obtain information about the current project
-(the [`cargo_metadata`] crate provides a Rust interface to this command).
+相反，鼓励使用 CLI 接口来驱动 Cargo。[`cargo metadata`] 命令可用于获取当前项目的信息（[`cargo_metadata`] crate 提供了此命令的 Rust 接口）。
 
 [`cargo metadata`]: ../commands/cargo-metadata.md
 [`cargo_metadata`]: https://crates.io/crates/cargo_metadata
