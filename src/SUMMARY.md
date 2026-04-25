@@ -40,7 +40,7 @@
     * [外部工具](reference/external-tools.md)
     * [注册中心](reference/registries.md)
         * [注册中心认证](reference/registry-authentication.md)
-            * [凭证提供者协议](reference/credential-provider-protocol.md)
+            * [凭证提供程序协议](reference/credential-provider-protocol.md)
         * [运行注册中心](reference/running-a-registry.md)
             * [注册中心索引](reference/registry-index.md)
             * [注册中心 Web API](reference/registry-web-api.md)
