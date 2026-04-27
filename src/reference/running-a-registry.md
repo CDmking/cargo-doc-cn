@@ -1,18 +1,10 @@
-# Running a Registry
+# 运行注册中心 {#running-a-registry}
 
-A minimal registry can be implemented by having a git repository that contains
-an index, and a server that contains the compressed `.crate` files created by
-[`cargo package`]. Users won't be able to use Cargo to publish to it, but this
-may be sufficient for closed environments. The index format is described in
-[Registry Index].
+可以通过包含索引的 git 仓库和包含由 [`cargo package`] 创建的压缩 `.crate` 文件的服务器来实现一个最小化的注册中心。用户将无法使用 Cargo 向其发布，但这对于封闭环境可能已经足够。索引格式在 [Registry Index] 中描述。
 
-A full-featured registry that supports publishing will additionally need to
-have a web API service that conforms to the API used by Cargo. The web API is
-described in [Registry Web API].
+支持发布功能的全功能注册中心还需要提供一个符合 [Registry Web API] 所述 API 的 Web API 服务。
 
-Commercial and community projects are available for building and running a
-registry. See <https://github.com/rust-lang/cargo/wiki/Third-party-registries>
-for a list of what is available.
+商业和社区项目可用于构建和运行注册中心。请参阅 <https://github.com/rust-lang/cargo/wiki/Third-party-registries> 获取可用项目列表。
 
 [Registry Web API]: registry-web-api.md
 [Registry Index]: registry-index.md
